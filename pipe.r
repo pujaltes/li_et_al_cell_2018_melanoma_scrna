@@ -8,7 +8,7 @@ if (!file.exists("data")) {
 }
 
 if (!file.exists("data/GSE99254_NSCLC.TCell.S12346.TPM.txt")) {
-	download.file("https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE99254&format=file&file=GSE99254%5FNSCLC%2ETCell%2ES12346%2ETPM%2Etxt%2Egz", "data/GSE99254_NSCLC.TCell.S12346.TPM.txt.gz")
+	download.file("https://ftp.ncbi.nlm.nih.gov/geo/series/GSE99nnn/GSE99254/suppl/GSE99254_NSCLC.TCell.S12346.TPM.txt.gz", "data/GSE99254_NSCLC.TCell.S12346.TPM.txt.gz")
 	system("gunzip data/GSE99254_NSCLC.TCell.S12346.TPM.txt.gz")
 }
 
