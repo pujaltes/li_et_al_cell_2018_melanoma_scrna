@@ -691,66 +691,66 @@ mel_collect_table_stats = function()
 generate_figs = function() 
 {
 	conf_res = colorize_by_confusion_mat(mc_id=tumor_clean_id, graph_id=tumor_id)
-	
+
 	# after manual build of supmc/marks file and generation of the supmc and marks files 
 	conf_res = colorize_by_confusion_mat(mc_id=tumor_clean_id, graph_id=tumor_id, supmc_file="config/all_tumor_supmc_paper.txt", marks_file="config/all_tumor_marks_paper.txt", res=conf_res)
-	
+
 	# remove erytrocytes mc
 	mc_a = scdb_mc(tumor_clean_id)
 	scdb_add_mc(paste0(tumor_clean_id, "_all"), mc_a)
 	a_group2col = get_mc_group2col(mc_a)
 	mc_a = mc_set_outlier_mc(mc_a, which(mc_a@colors == a_group2col['erythrocyte']))
-	
+
 	# split tumor mc's to T/NK and B/plasma/myeloid/osteoclasts/macrophages/pDC
 	mc_a = scdb_mc(tumor_clean_id)
 	a_group2col = get_mc_group2col(mc_a)
-	
+
 	col2grp = c(rep('T_NK', 2), rep('non_T_NK', 5), rep('rest', 2))
 	names(col2grp) = a_group2col[c('T', 'NK', 'B', 'plasma', 'myeloid', 'osteoclast', 'pDC', 'melanocyte', 'erythrocyte')]
 	mcell_mc_split_by_color_group(tumor_clean_id, tumor_id, col2grp=col2grp)
-	
+
 	# T/NK mcs
 	t_sup <<- colorize_by_confusion_mat(mc_id=tumor_t_nk_id, graph_id=tumor_id)
-	
+
 	# after manual build of supmc/marks file
 	t_sup <<- colorize_by_confusion_mat(mc_id=tumor_t_nk_id, graph_id=tumor_id, supmc_file="config/t_nk_tumor_supmc_paper.txt", marks_file="config/t_nk_tumor_marks_paper.txt", res=t_sup)
-	
+
 	mcell_mc_plot_hierarchy(mc_id=tumor_t_nk_id, graph_id=tumor_id, mc_order=t_sup$mc_hc$order, sup_mc = t_sup$mc_sup, width=2000, height=3000, min_nmc=2, shades=colorRampPalette((c('white', 'darkred', 'black'))), plot_grid=F)
-	
+
 	mel_basic_mc_mc2d_plots(mc_id=tumor_t_nk_id, mat_id=tumor_id, graph_id=tumor_id, lateral_gset_id = lateral_gset_id)
-	
+
 	# non T/NK mcs: B, plasma, myeloid, osteoclast, pDC
 	nt_sup <<- colorize_by_confusion_mat(mc_id=tumor_non_t_nk_id, graph_id=tumor_id)
-	
+
 	# after manual build of supmc/marks file
 	nt_sup <<- colorize_by_confusion_mat(mc_id=tumor_non_t_nk_id, graph_id=tumor_id, supmc_file="config/non_t_nk_tumor_supmc_paper.txt", marks_file="config/non_t_nk_tumor_marks_paper.txt", res=nt_sup)
-	
+
 	mcell_mc_plot_hierarchy(mc_id=tumor_non_t_nk_id, graph_id=tumor_id, mc_order=nt_sup$mc_hc$order, sup_mc = nt_sup$mc_sup, width=2100, height=3000, min_nmc=2, shades=colorRampPalette((c('white', 'darkred', 'black'))), plot_grid=F)
-	
+
 	mel_basic_mc_mc2d_plots(mc_id=tumor_non_t_nk_id, mat_id=tumor_id, graph_id=tumor_id, lateral_gset_id = lateral_gset_id)
-	
-	
+
+
 	# load objects
 	mc_t_nk = scdb_mc(tumor_t_nk_id)
 	lfp_t = log2(mc_t_nk@mc_fp)
-	
+
 	mat_t_nk = scdb_mat(tumor_t_nk_id)
 	mat_t_nk_ds = scm_downsamp(mat_t_nk@mat, 500)
-	
+
 	t_group2col = get_mc_group2col(mc_t_nk)
 	t_col2group = get_mc_col2group(mc_t_nk)
-	
+
 	mc_non_t_nk = scdb_mc(tumor_non_t_nk_id)
 	lfp_nt = log2(mc_non_t_nk@mc_fp)
-	
+
 	mat_non_t_nk = scdb_mat(tumor_non_t_nk_id)
 	mat_non_t_nk_ds = scm_downsamp(mat_non_t_nk@mat, 500)
-	
+
 	nt_group2col = get_mc_group2col(mc_non_t_nk)
 	nt_col2group = get_mc_col2group(mc_non_t_nk)
-	
+
 	mat_all = scdb_mat(tumor_id)
-	
+
 	global_col2group = c(t_col2group, nt_col2group)
 	global_group2col = c(t_group2col, nt_group2col)
 
@@ -768,34 +768,34 @@ generate_figs = function()
 	}
 
 	####
-	
+
 	prev_params = override_metacell_params(list(mcell_mc2d_plot_key=F, mcell_mc2d_height=1500, mcell_mc2d_width=1500, mcell_mc2d_cex=0.5))
 	mcell_mc2d_plot(tumor_clean_id, plot_edges=T)
 	mcell_mc2d_plot(tumor_t_nk_id, plot_edges=F)
 	mcell_mc2d_plot(tumor_t_nk_id, plot_edges=T)
 	restore_metacell_params(prev_params)
-	
+
 	mc_t_nk_pats = table(mc_t_nk@mc, mat_t_nk@cell_metadata[names(mc_t_nk@mc), 'PatientID'])
 	tumor_pats = intersect(all_tumor_pats, names(which(colSums(mc_t_nk_pats) >= min_t_nk_cells_per_patient)))
-	
+
 	metacell:::plot_color_bar(vals=names(ord_t_nk_nms), cols=t_group2col[names(ord_t_nk_nms)], title="", fig_fn=scfigs_fn(tumor_t_nk_id, "group_colors_legend"))
-	
+
 	# group composition barplots (for Fig 3B)
 	pats_grps_t_nk = table( mat_t_nk@cell_metadata[names(mc_t_nk@mc), 'PatientID'], t_col2group[mc_t_nk@colors[mc_t_nk@mc]])
 	pats_grps_t_nk = pats_grps_t_nk[tumor_pats, ]
 	pats_by_dysf = tumor_pats[order(pats_grps_t_nk[, 'dysfunctional']/ rowSums(pats_grps_t_nk[, t_nms]))]
 	t_pats_ord = mc_group_composition_barplots(tumor_t_nk_id, tumor_t_nk_id, t_nms, 'T_clust', t_col2group, t_group2col, pat_groups=list(Tumors=tumor_pats), clust_pats=T, min_pat_cells=80)
 	t_pats_dysf_ord = mc_group_composition_barplots(tumor_t_nk_id, tumor_t_nk_id, t_nms, 'T_by_dysf', t_col2group, t_group2col, pat_groups=list(Tumors=pats_by_dysf), clust_pats=F, min_pat_cells=80)
-	
+
 	# plot specific genes lfp on the 2D projection (Fig 1E)
 	mel_mc2d_plot_genes_of_interest(tumor_t_nk_id)
-	
+
 	# run proliferation analysis on T/NK (Fig 5A-B)
 	prolif_df = mel_mc_prolif_score()
-	
+
 	# bargraphs of key genes (Fig 1D)
 	mel_plot_e_gc_barplots(tumor_t_nk_id, "all_hm_genes", genes=t_nk_genes, ncol=2, panel_height=48, panel_width=280, ord_first_by_color=T)
-	
+
 	# Fig 1F
 	mc_pat = table(mc_t_nk@mc, mat_t_nk@cell_metadata[names(mc_t_nk@mc), 'PatientID'])
 	v = rowSums(mc_pat >= 2)
@@ -804,7 +804,7 @@ generate_figs = function()
 	dev.off()
 
 	mel_collect_table_stats()
-	
+
 	#
 	# Fig 2 and related sup figs
 	#
@@ -812,39 +812,39 @@ generate_figs = function()
 
 	lat_gset = scdb_gset(lateral_gset_id)
 	lat_genes = names(lat_gset@gene_set)
-	
+
 	# genes cor heatmap on CD8 cells or metacells
 	f_cd8_mc = mc_t_nk@colors %in% t_group2col[cd8_nms]
 	f_cd8_c = f_cd8_mc[mc_t_nk@mc]
-	
+
 	cd8_genes = setdiff(names(which(apply(abs(lfp_t[, f_cd8_mc]), 1, max) > log2(3))), lat_genes)
-	
+
 	cd8_genes = grep("^RP", cd8_genes, invert=T, v=T)
 	all_genes_ann = annotate_genes(rownames(lfp_t))
 	g_ann = data.frame(row.names=cd8_genes, type=all_genes_ann[cd8_genes, 'type'])
-	
+
 	cd8_cor_c = tgs_cor(t(as.matrix(mat_t_nk_ds[cd8_genes, f_cd8_c])), spearman=T)
 	cd8_cor_mc = cor(t(lfp_t[cd8_genes, f_cd8_mc]))
 	diag(cd8_cor_c) = NA
 	diag(cd8_cor_mc) = NA
-	
+
 	# Fig 2a: CD8 gene-gene cor heatmaps
 	blwtrd_cols = colorRampPalette(c('blue', 'white', 'red'))(101)
 	.plot_start(scfigs_fn(tumor_t_nk_id, "fig2_cd8_c_genes_cor"), max(700, 300 + length(cd8_genes) * 12), max(700, 300 + length(cd8_genes) * 12))
 	pheatmap(pmin(pmax(cd8_cor_c, -0.1), 0.1), clustering_method="ward.D2", cutree_rows=15, cutree_cols=15, treeheight_col=0, treeheight_row=0, cellwidth=10, cellheight=10, fontsize=12, col=blwtrd_cols, show_colnames=F) #annotation_row=g_ann, annotation_colors=list(type=ggroup_cols), 
 	dev.off()
-	
+
 	.plot_start(scfigs_fn(tumor_t_nk_id, "fig2_cd8_mc_genes_cor"), max(700, 300 + length(cd8_genes) * 12), max(700, 300 + length(cd8_genes) * 12))
 	pheatmap(pmin(pmax(cd8_cor_mc, -0.7), 0.7), clustering_method="ward.D2", cutree_rows=15, cutree_cols=15, treeheight_col=0, treeheight_row=0, cellwidth=10, cellheight=10, fontsize=12, col=blwtrd_cols, show_colnames=F) #, annotation_row=g_ann, annotation_colors=list(type=ggroup_cols)
 	dev.off()
-	
+
 	# Find high variance non-TF and non blacklisted genes
 	gf = apply(lfp_t[, f_cd8_mc], 1, max) > 1 & !grepl("TF", all_genes_ann$type) & (! (rownames(lfp_t) %in% lat_genes))
-	
+
 	dysf_anchor = 'LAG3'
 	dysf_genes =  tail(sort(cor(lfp_t[dysf_anchor, f_cd8_mc], t(lfp_t[gf, f_cd8_mc]))[1,]), 30)
 	dysf_sc = colMeans(lfp_t[names(dysf_genes), ])
-	
+
 	# S2B - cor to lag3 - mc vs sc
 	dysf_anchor_mc_cor = cor(lfp_t[dysf_anchor, f_cd8_mc], t(lfp_t[setdiff(rownames(lfp_t)[gf], dysf_anchor), f_cd8_mc]))[1,]
 	dysf_anchor_c_cor = cor(as.matrix(mat_t_nk_ds[dysf_anchor, f_cd8_c]), as.matrix(t(mat_t_nk_ds[setdiff(rownames(lfp_t)[gf], dysf_anchor), f_cd8_c])), method='spearman')[1,]
@@ -854,11 +854,11 @@ generate_figs = function()
 	plot(dysf_anchor_mc_cor, dysf_anchor_c_cor, pch=19, cex=0.5, col=ifelse(names(dysf_anchor_c_cor) %in% names(dysf_genes), 'red', 'black'), xlim=c(0, max(dysf_anchor_mc_cor)), ylim=c(0, max(dysf_anchor_c_cor)), xlab=sprintf("cor to %s on mc", dysf_anchor), ylab=sprintf("cor to %s on cells", dysf_anchor), main=sprintf("R^2 = %.2f", cor(dysf_anchor_mc_cor, dysf_anchor_c_cor, use='pair')**2))
 	text(dysf_anchor_mc_cor[lab_f], dysf_anchor_c_cor[lab_f], names(dysf_anchor_c_cor[lab_f]), cex=0.7, col=ifelse(names(dysf_anchor_c_cor[lab_f]) %in% names(dysf_genes), 'red', 'black'), pos=2)
 	dev.off()
-	
+
 	.plot_start(scfigs_fn(tumor_t_nk_id, sprintf("fig2_genes_cor_to_dysf_anchor_mc_vs_sc")), 400, 400)
 	plot(dysf_anchor_mc_cor, dysf_anchor_c_cor, pch=19, cex=0.5, col=ifelse(names(dysf_anchor_c_cor) %in% names(dysf_genes), 'red', 'black'), xlab=sprintf("cor to %s on mc", dysf_anchor), ylab=sprintf("cor to %s on cells", dysf_anchor))
 	dev.off()
-	
+
 	# helper func
 	plot_genes_by_anchors = function(anchor_gene, n=30, name='dysfunctional')
 	{
@@ -873,24 +873,24 @@ generate_figs = function()
 		mtext(names(genes), 2, at=seq(0.6, len=length(genes), by=1.2), las=2, line=0.5)
 		dev.off()
 	}
-	
+
 	# Alternative anchors as a naive control
 	for (anchor_gene in c("LAG3", "HAVCR2")) {
 		plot_genes_by_anchors(anchor_gene)
 	}
-	
+
 	for (i in seq_along(dysf_genes)) { 
 		plt("Dysf-score", names(dysf_genes)[i], lfp_t[, f_cd8_mc], cols=mc_t_nk@colors[f_cd8_mc], x=dysf_sc[f_cd8_mc], show_mc_ids=F, add_grid=T, ofn=scfigs_fn(tumor_t_nk_id, sprintf("dysf_grad_lfp_%d_%s", i, names(dysf_genes)[i]), scfigs_dir(tumor_t_nk_id, "fig2_grad_lfps")), cex.lab=1.5)
 	}
-	
+
 	cyto_anchor = 'FGFBP2'
 	cyto_genes =  tail(sort(cor(lfp_t[cyto_anchor, f_cd8_mc], t(lfp_t[gf, f_cd8_mc]))[1,]), 30)
 	cyto_sc = colMeans(lfp_t[names(cyto_genes), ])
-	
+
 	# S2C-D - robustness
 	g_cor_to_dysf = sapply(rownames(lfp_t)[gf], function(nm) cor(lfp_t[nm, f_cd8_mc], colMeans(lfp_t[setdiff(names(dysf_genes), nm), f_cd8_mc])))
 	g_cor_to_cyto = sapply(rownames(lfp_t)[gf], function(nm) cor(lfp_t[nm, f_cd8_mc], colMeans(lfp_t[setdiff(names(cyto_genes), nm), f_cd8_mc])))
-	
+
 	dysf_anchor_full_mc_cor = cor(lfp_t[dysf_anchor, f_cd8_mc], t(lfp_t[gf, f_cd8_mc]))[1,]
 	dysf_anchor_ranks = length(dysf_anchor_full_mc_cor) + 1 - rank(dysf_anchor_full_mc_cor)
 	yy = tail(sort(g_cor_to_dysf), 60)
@@ -898,7 +898,7 @@ generate_figs = function()
 	par(mar=c(4,12,1,1))
 	barplot(yy, horiz=T, col=ifelse(names(yy) %in% names(dysf_genes), t_group2col['dysfunctional'], 'darkgrey'), las=2, border=NA, cex.names=0.7, names.arg=sprintf("%s (%d)", names(yy), dysf_anchor_ranks[names(yy)]))
 	dev.off()
-	
+
 	cyto_anchor_full_mc_cor = cor(lfp_t[cyto_anchor, f_cd8_mc], t(lfp_t[gf, f_cd8_mc]))[1,]
 	cyto_anchor_ranks = length(cyto_anchor_full_mc_cor) + 1 - rank(cyto_anchor_full_mc_cor)
 	yy = tail(sort(g_cor_to_cyto), 60)
@@ -906,74 +906,74 @@ generate_figs = function()
 	par(mar=c(4,12,1,1))
 	barplot(yy, horiz=T, col=ifelse(names(yy) %in% names(cyto_genes), t_group2col['effector2'], 'darkgrey'), las=2, border=NA, cex.names=0.7, names.arg=sprintf("%s (%d)", names(yy), cyto_anchor_ranks[names(yy)]))
 	dev.off()
-	
+
 	.plot_start(scfigs_fn(tumor_t_nk_id, "fig2_cyto_genes_barplot"), 200, 500)
 	par(mar=c(4,8,1,1))
 	#barplot(cyto_genes, horiz=T, las=2, col=all_genes_ann[names(cyto_genes), 'color'])
 	barplot(cyto_genes, horiz=T, col=t_group2col['effector2'], yaxt='n', xlab=paste('cor to', cyto_anchor))
 	mtext(names(cyto_genes), 2, at=seq(0.6, len=length(cyto_genes), by=1.2), col=ifelse(all_genes_ann[names(cyto_genes), 'color'] == 'grey', 'black', 'black'), las=2, line=0.5)
 	dev.off()
-	
+
 	for (anchor_gene in c("FGFBP2", "CX3CR1")) {
 		plot_genes_by_anchors(anchor_gene, name="effector2")
 	}
-	
+
 	for (i in seq_along(cyto_genes)) { 
 		plt("Eff2-score", names(cyto_genes)[i], lfp_t[, f_cd8_mc], cols=mc_t_nk@colors[f_cd8_mc], x=cyto_sc[f_cd8_mc], show_mc_ids=F, add_grid=T, ofn=scfigs_fn(tumor_t_nk_id, sprintf("cyto_grad_lfp_%d_%s", i, names(cyto_genes)[i]), scfigs_dir(tumor_t_nk_id, "fig2_grad_lfps")), cex.lab=1.5)
 	}
-	
+
 	plt("Dysf-score", "Eff2-score", lfp_t[, f_cd8_mc], mc_t_nk@colors[f_cd8_mc], y=cyto_sc[f_cd8_mc], x=dysf_sc[f_cd8_mc], ofn=scfigs_fn(tumor_t_nk_id, "fig2_plt_cyto_vs_dysf_cd8"), show_mc_ids=F, cex=3, add_grid=T)
-	
+
 	tot_mc_umis = tapply(Matrix::colSums(mat_t_nk@mat[, names(mc_t_nk@mc)]), mc_t_nk@mc, sum)
 	plt("Dysf-score", "total mc umis (log2)", lfp_t[, f_cd8_mc], mc_t_nk@colors[f_cd8_mc], x=dysf_sc[f_cd8_mc], y=log2(tot_mc_umis[f_cd8_mc]), ofn=scfigs_fn(tumor_t_nk_id, "fig2_plt_tot_mc_umi_vs_dysf_cd8"), show_mc_ids=F, cex=3, add_grid=T)
 	plt("Eff2-score", "total mc umis (log2)", lfp_t[, f_cd8_mc], mc_t_nk@colors[f_cd8_mc], x=cyto_sc[f_cd8_mc], y=log2(tot_mc_umis[f_cd8_mc]), ofn=scfigs_fn(tumor_t_nk_id, "fig2_plt_tot_mc_umi_vs_cyto_cd8"), show_mc_ids=F, cex=3, add_grid=T)
-	
+
 	# %cyto UMIs vs %dysf UMIs on single cells (+ %cell-cycle)
 	cc_res = mel_mc_prolif_score()
-	
+
 	cd8_cells_f = f_cd8_c
-	
+
 	tot = Matrix::colSums(mat_t_nk@mat[, cd8_cells_f])
 	tot_dysf = Matrix::colSums(mat_t_nk@mat[names(dysf_genes), cd8_cells_f])
 	tot_cyto = Matrix::colSums(mat_t_nk@mat[names(cyto_genes), cd8_cells_f])
 	max_dysf_cyto_f_umi = 0.05
 	sc_tot = data.frame(row.names=names(tot), f_cyto=tot_cyto/tot, f_dysf=tot_dysf/tot, group= t_col2group[mc_t_nk@colors[mc_t_nk@mc[cd8_cells_f]]], patient=mat_t_nk@cell_metadata[names(tot), 'PatientID'], f_cc=cc_res$f_cc[names(tot)])
-	
+
 	.plot_start(scfigs_fn(tumor_t_nk_id, "fig2_cyto_vs_dysf_cells_cd8"), 900, 300)
 	layout(matrix(1:3, 1, 3))
 	cd8_nms_to_plot = cd8_nms
 	par(mar=c(5,5,1,1))
-	
+
 	for (g in cd8_nms_to_plot) {
 		plot(pmin(sc_tot$f_dysf, max_dysf_cyto_f_umi), pmin(sc_tot$f_cyto, max_dysf_cyto_f_umi), pch=19, cex=0.4, col='darkgrey', xlab='% Dysf UMIs', ylab='% Eff2 UMIs')
 		points(pmin(sc_tot[sc_tot$group == g, 'f_dysf'], max_dysf_cyto_f_umi), pmin(sc_tot[sc_tot$group == g, 'f_cyto'], max_dysf_cyto_f_umi), pch=19, cex=0.4, col=t_group2col[g]) 
 	}
 	dev.off()
-	
+
 	# f_dysf on CD8s by patient + color by reactivity
 	sc_tot = sc_tot[sc_tot$patient %in% tumor_pats, ]
 	pats_dysf_load = tapply(sc_tot$f_dysf, sc_tot$patient, median)
 	pats_by_cd8_f_dysf = names(sort(pats_dysf_load))
 	o_dysf = ordered(sc_tot$patient, levels=pats_by_cd8_f_dysf)
-	
+
 	f_dysf_eff2_reg = 1e-3
 	sc_tot$l_f_dysf = log2(f_dysf_eff2_reg + sc_tot$f_dysf)
 	sc_tot$l_f_eff2 = log2(f_dysf_eff2_reg + sc_tot$f_cyto)
 	sc_tot$l_f_cc = log2(f_dysf_eff2_reg + sc_tot$f_cc)
-	
+
 	.plot_start(scfigs_fn(tumor_t_nk_id, "fig6_f_cyto_vs_dysf_on_cd8_by_patient"), 900, 400)
 	par(mar=c(10,5,1,1))
 	boxplot(l_f_dysf  ~ o_dysf, sc_tot, las=2, boxfill='white', border='white', xlim=c(-5.5, length(pats_by_cd8_f_dysf) + 0.5), ylim=c(log2(f_dysf_eff2_reg) - 1, max(sc_tot[, c('l_f_dysf', 'l_f_eff2')])), ylab='%UMIs (log2)')
-	
+
 	boxplot(l_f_dysf ~ o_dysf, sc_tot, varwidth=F, notch=F, pch=19, cex=0.3, col=t_group2col['dysfunctional'], boxwex=0.25, at=seq_along(pats_by_cd8_f_dysf)-0.15, add=T, xaxt='n', yaxt='n', las=2)
 	boxplot(l_f_eff2 ~ o_dysf, sc_tot, varwidth=F, notch=F, pch=19, cex=0.3, col=t_group2col['effector2'], boxwex=0.25, at=seq_along(pats_by_cd8_f_dysf)+0.15, add=T, xaxt='n', yaxt='n', las=2)
 	points(seq_along(pats_by_cd8_f_dysf), rep(log2(f_dysf_eff2_reg) - 0.5, length(pats_by_cd8_f_dysf)), pch=21, cex=3, bg=pat_reac_col[pats_by_cd8_f_dysf], col=ifelse(pats_by_cd8_f_dysf %in% na_reac_pats, 'white', 'black'))
 	legend("topleft", legend=c('dysfunctional', 'effector2'), fill=t_group2col[c('dysfunctional', 'effector2')], bty='n', cex=1.5)
 	leg_labs = reac_col2type[intersect(reac_pat_cols, pat_reac_col)]
-	
+
 	legend("bottomleft", legend=leg_labs, pch=21, pt.bg=names(leg_labs), pt.cex=2, bty='n', cex=1.5)
 	dev.off()
-	
+
 	pat_cd8_comp = table(mat_t_nk@cell_metadata[names(tot), 'PatientID'], t_col2group[mc_t_nk@colors[mc_t_nk@mc[names(tot)]]])
 	pat_cd8_comp_n = pat_cd8_comp/ rowSums(pat_cd8_comp)
 	pat_cd8_comp_n = pat_cd8_comp_n[pats_by_cd8_f_dysf, intersect(colnames(pat_cd8_comp_n), t_nms)]
@@ -981,9 +981,9 @@ generate_figs = function()
 	par(mar=c(10,5,1,1))
 	barplot(t(pat_cd8_comp_n), las=2, co=t_group2col[colnames(pat_cd8_comp_n)], xlim=c(-5.5, length(pats_by_cd8_f_dysf)*1.2 + 0.5), ylab='fraction')
 	dev.off()
-	
+
 	dysf_vs_cyto_model = model_by_tfs(tumor_t_nk_id, dysf_sc, cyto_sc, all_genes_ann, max_genes_for_plot_size = 30, f=f_cd8_mc)
-	
+
 	# Fig S4B: top cor genes to dysf load on groups per patient
 	group_per_patient_top_cor_to_dysf_helper = function(group, n_genes=50) 
 	{
@@ -1002,52 +1002,52 @@ generate_figs = function()
 	for (gg in c('monocyte', 'B')) {
 		group_per_patient_top_cor_to_dysf_helper(gg)
 	}
-	
+
 	### CD4 (Treg)
-	
+
 	# genes cor heatmap
 	f_treg_mc = mc_t_nk@colors %in% t_group2col['Treg']
 	f_treg_c = f_treg_mc[mc_t_nk@mc]
 	treg_genes = setdiff(names(which(apply(lfp_t[, f_treg_mc], 1, max) > log2(3))), lat_genes)
-	
+
 	treg_genes = grep("^RP", treg_genes, invert=T, v=T)
 	g_ann = data.frame(row.names=treg_genes, type=all_genes_ann[treg_genes, 'type'])
-	
+
 	treg_cor_c = tgs_cor(t(as.matrix(mat_t_nk_ds[treg_genes, f_treg_c])), spearman=T)
 	treg_cor_mc = cor(t(lfp_t[treg_genes, f_treg_mc]))
-	
+
 	# Treg gene-gene cor heatmaps
 	treg_cutree = 5
 	.plot_start(scfigs_fn(tumor_t_nk_id, "fig2_treg_c_genes_cor"), max(700, 300 + length(treg_genes) * 12), max(700, 300 + length(treg_genes) * 12))
 	pheatmap(pmin(pmax(treg_cor_c, -0.1), 0.1), clustering_method="ward.D2", cutree_rows=treg_cutree, cutree_cols=treg_cutree, treeheight_col=0, annotation_row=g_ann, annotation_colors=list(type=ggroup_cols), cellwidth=10, cellheight=10, fontsize=12)
 	dev.off()
-	
+
 	.plot_start(scfigs_fn(tumor_t_nk_id, "fig2_treg_mc_genes_cor"), max(700, 300 + length(treg_genes) * 12), max(700, 300 + length(treg_genes) * 12))
 	pheatmap(pmin(pmax(treg_cor_mc, -0.7), 0.7), clustering_method="ward.D2", cutree_rows=treg_cutree, cutree_cols=treg_cutree, treeheight_col=0, annotation_row=g_ann, annotation_colors=list(type=ggroup_cols), cellwidth=10, cellheight=10, fontsize=12)
 	dev.off()
-	
+
 	# remove TFs for model 
 	gf = apply(lfp_t[, f_treg_mc], 1, max) > 1 & !grepl("TF", all_genes_ann$type)& (! (rownames(lfp_t) %in% lat_genes))
 	#gf = apply(lfp_t[, f_treg_mc], 1, max) > 1
-	
+
 	treg_anchor = "IL2RA"
 	treg_genes =  tail(sort(cor(lfp_t[treg_anchor, f_treg_mc], t(lfp_t[gf, f_treg_mc]))[1,]), 30)
 	treg_sc = colMeans(lfp_t[names(treg_genes), ])
-	
+
 	.plot_start(scfigs_fn(tumor_t_nk_id, "fig2_Treg_genes_barplot"), 200, 500)
 	par(mar=c(4,8,1,1))
 	barplot(treg_genes, horiz=T, col=t_group2col['Treg'], yaxt='n', xlab=paste('cor to', treg_anchor))
 	mtext(names(treg_genes), 2, at=seq(0.6, len=length(treg_genes), by=1.2), col=ifelse(all_genes_ann[names(treg_genes), 'color'] == 'grey', 'black', 'black'), las=2, line=0.5)
 	dev.off()
-	
+
 	for (i in seq_along(treg_genes)) { 
 		plt("Treg-score", names(treg_genes)[i], lfp_t[, f_treg_mc], cols=mc_t_nk@colors[f_treg_mc], x=treg_sc[f_treg_mc], show_mc_ids=F, add_grid=T, ofn=scfigs_fn(tumor_t_nk_id, sprintf("Treg_grad_lfp_%d_%s", i, names(treg_genes)[i]), scfigs_dir(tumor_t_nk_id, "fig2_grad_lfps")), cex.lab=1.5)
 	}
-	
+
 	plt("Treg-score", "total mc umis (log2)", lfp_t[, f_treg_mc], mc_t_nk@colors[f_treg_mc], x=treg_sc[f_treg_mc], y=log2(tot_mc_umis[f_treg_mc]), ofn=scfigs_fn(tumor_t_nk_id, "fig2_plt_tot_mc_umi_vs_treg_Treg"), show_mc_ids=F, cex=3, add_grid=T)
-	
+
 	treg_model = model_by_tfs(tumor_t_nk_id, treg_sc, NULL, all_genes_ann, f=f_treg_mc, nm1='Treg', nm2='None', grp1 = 'Treg', grp2=NULL)
-	
+
 	# Compare known exhaustion genes cor to Dysf gradient and to Treg gradient
 	fig2_hand_selected_genes_dysf_and_treg_cor = function(size=4, label_cex=0.7, xlim=NULL, ylim=NULL) 
 	{
@@ -1066,7 +1066,7 @@ generate_figs = function()
 		list(dysf=cd8_exhaust_c, treg=treg_exhaust_c)
 	}
 	dysf_vs_treg_selected_genes = fig2_hand_selected_genes_dysf_and_treg_cor()
-	
+
 	# Single genes TF models
 	fig2_tf_model_per_gene = function(min_max_coef=0.1, min_r2=0.5, z=0.4, target_g_coef=NULL) {
 		tfs = rownames(all_genes_ann)[grepl("TF", all_genes_ann$type)]
@@ -1107,34 +1107,34 @@ generate_figs = function()
 		
 		target_g_coef
 	}
-	
+
 	target_g_coef_f = fig2_tf_model_per_gene()
-	
+
 	plt("dysf-score", "Treg-score", lfp_t, cols=mc_t_nk@colors, x=dysf_sc, y=treg_sc, ofn=scfigs_fn(tumor_t_nk_id, "fig2_plt_treg_vs_dysf_all_mc"), show_mc_ids=F, add_grid=T, cex=2)
-	
+
 	# global Tfh vs Treg and Dysf genes: Create mc by groups, splitting Tregs and cd8-dysf to low and high expressed groups
 	mc_t_nk_sep = mc_t_nk
 	mc_t_nk_sep@colors[dysf_sc > 0.7] = 'gold4'
 	mc_t_nk_sep@colors[114] = t_group2col['dysf-cd4'] # keep the dysf-cd4 mc
 	mc_t_nk_sep@colors[lfp_t['FOXP3', ] > 2.25] = 'red4'
 	mc_t_nk_sep@color_key = rbind(mc_t_nk_sep@color_key, data.frame(gene=c('', ''), group=c('dysf-hi', 'Treg-hi'), color=c('gold4', 'red4')))
-	
+
 	treg_dysf_hi_suff = "_Treg_dysf_hi"
 	treg_dysf_hi_nms = c("Treg", "Treg-hi", "Tfh", "dysf-cd4", "naive", "effector1", "effector2", "em-cd4", "dysfunctional", "dysf-hi", "NK")
 	treg_dysf_hi_ord = seq_along(treg_dysf_hi_nms)
 	names(treg_dysf_hi_ord) = treg_dysf_hi_nms
 	tumor_t_nk_sep_id = paste0(tumor_t_nk_id, treg_dysf_hi_suff)
 	scdb_add_mc(tumor_t_nk_sep_id, mc_t_nk_sep)
-	
+
 	tumor_t_nk_sep_group_id = paste0(tumor_t_nk_sep_id, "_by_color_groups")
-	
+
 	mc_by_color_group(mc_id=tumor_t_nk_sep_id, mat_id=tumor_t_nk_id, group_ord=treg_dysf_hi_ord, rebuild=T)
-	
+
 	mc_t_nk_g = scdb_mc(tumor_t_nk_sep_group_id)
 	lfp_t_g = log2(mc_t_nk_g@mc_fp)
 	colnames(lfp_t_g) = treg_dysf_hi_nms
 	n_genes_per_group = 20
-	
+
 	g1s = c('Treg-hi', 'dysf-hi', 'dysf-hi', 'Treg-hi', 'dysf-hi', 'NK')
 	g2s = c('Tfh', 'Tfh', 'Treg-hi', 'Treg', 'dysfunctional', 'effector2')
 	for (i in 1:length(g1s)) {
@@ -1150,7 +1150,7 @@ generate_figs = function()
 		text(lfp_t_g[g12_g, g1], lfp_t_g[g12_g, g2], g12_g, cex=0.8, pos=ifelse(lfp_t_g[g12_g, g1] > 0, 2, 4))
 		dev.off()
 	}
-	
+
 	# diff expr Treg (enr over naive) vs Dysf (enr over naive)
 	t_nk_c_by_grp = split(names(mc_t_nk@mc), t_col2group[mc_t_nk@colors[mc_t_nk@mc]])
 	group_enr_over_naive_comparison_helper = function(grp1='Treg', grp2='dysfunctional', zlim=c(-2, 4.5)) 
@@ -1179,67 +1179,67 @@ generate_figs = function()
 	group_enr_over_naive_comparison_helper()
 	group_enr_over_naive_comparison_helper(grp1='Treg', grp2='Tfh')
 	group_enr_over_naive_comparison_helper(grp1='Tfh', grp2='dysfunctional')
-	
+
 	############################
 	#
 	# Myeloid and patient related analysis (S3, Fig 3)
 	#
 	############################
 	message("Starting myeloid related analysis...")
-	
+
 	# create non-T mc for plots - merging colors of im/mature-DC --> DC and non-classic-monocyte --> monocyte
 	mc_non_t_nk_merged = mc_non_t_nk
 	mc_non_t_nk_merged@colors = rep("white", n=length(mc_non_t_nk@colors))
 	mc_non_t_nk_merged@color_key = data.frame(group=c(), gene=c(), color=c(), priority=c(), T_fold=c())
 	scdb_add_mc(tumor_non_t_nk_merged_id, mc_non_t_nk_merged)
 	nt_sup = colorize_by_confusion_mat(mc_id = tumor_non_t_nk_merged_id, graph_id=tumor_id, 
-																		 supmc_file=paste0("config/non_t_nk_tumor_supmc_merged_grps.txt"), 
-																		 marks_file=paste0("config/non_t_nk_tumor_marks_merged_grps.txt"), res=nt_sup) 
+																			supmc_file=paste0("config/non_t_nk_tumor_supmc_merged_grps.txt"), 
+																			marks_file=paste0("config/non_t_nk_tumor_marks_merged_grps.txt"), res=nt_sup) 
 	mc_non_t_nk_merged = scdb_mc(tumor_non_t_nk_merged_id)
 	mc2d_non_t_nk_merged = scdb_mc2d(tumor_non_t_nk_id)
 	mc2d_non_t_nk_merged@mc_id = tumor_non_t_nk_merged_id
 	scdb_add_mc2d(tumor_non_t_nk_merged_id, mc2d_non_t_nk_merged)
-	
+
 	prev_params = override_metacell_params(list(mcell_mc2d_plot_key=F, mcell_mc2d_height=1500, mcell_mc2d_width=1500, mcell_mc2d_cex=0.5))
 	mcell_mc2d_plot(tumor_non_t_nk_merged_id, plot_edges=T)
 	mcell_mc2d_plot(tumor_non_t_nk_merged_id, plot_edges=F)
 	restore_metacell_params(prev_params)
-	
-	
+
+
 	f_myl_mc = nt_col2group[mc_non_t_nk@colors] %in% myl_nms
 	f_myl_c = f_myl_mc[mc_non_t_nk@mc]
-	
+
 	# bargraphs of key genes
 	non_t_nk_genes =  c('CD74', 'CD14', 'MMP9', 'HLA-DRA', 'MS4A1', 'TYROBP', 'CD79A', 'MZB1', 'XBP1', 'IRF7', 'IRF8', 'TCF4', 'GZMB', 'TCL1A', 'LILRA4', 'LYZ', 'CDKN1C', 'IDO1', 'ISG15', 'CLEC10A', 'CD1C', 'CD1A', 'APOE', 'C1QA', 'FCGR3A', 'S100A8', 'S100A12', 'CD274')
 	mel_plot_e_gc_barplots(tumor_non_t_nk_merged_id, "selected_hm_genes", genes=non_t_nk_genes, ncol=2, panel_height=48, panel_width=280, ord_first_by_color=T)
-	
+
 	metacell:::plot_color_bar(vals=rev(non_t_merged_nms), cols=global_group2col[rev(non_t_merged_nms)], title="", fig_fn=scfigs_fn(tumor_non_t_nk_merged_id, "group_colors_legend"))
-	
+
 	# patient composition barplots
 	global_pat_grp = table(mat_all@cell_metadata[c(names(mc_non_t_nk@mc), names(mc_t_nk@mc)), 'PatientID'], global_col2group[c(mc_non_t_nk@colors[mc_non_t_nk@mc], mc_t_nk@colors[mc_t_nk@mc])])
 	global_pat_grp = global_pat_grp[tumor_pats, ]
-	
+
 	stopifnot(length(t_nms) + length(non_t_nms) == ncol(global_pat_grp) & length(intersect(t_nms, non_t_nms)) == 0)
-	
+
 	# normalize #cells separetaly for T/NK and non-T/NK
 	global_pat_grp_norm =  global_pat_grp
 	global_pat_grp_norm[, t_nms] = global_pat_grp_norm[, t_nms] / rowSums(global_pat_grp_norm[, t_nms])
 	global_pat_grp_norm[, non_t_nms] = global_pat_grp_norm[, non_t_nms] / rowSums(global_pat_grp_norm[, non_t_nms])
-	
+
 	non_t_pats_ord = mc_group_composition_barplots(tumor_non_t_nk_id, tumor_id, groups=non_t_nms, name="non_T", col2group=global_col2group, group2col=global_group2col, pat_groups=list(Tumors=tumor_pats), pat_grp=global_pat_grp[, non_t_nms], pat_grp_n = global_pat_grp_norm[, non_t_nms], clust_pats=T, min_pat_cells=50)
-	
+
 	pats_by_dysf = tumor_pats[order(global_pat_grp_norm[, 'dysfunctional']/ rowSums(global_pat_grp_norm[, t_nms]))]
-	
+
 	all_nms = c(t_nms, non_t_nms)
 	t_pats_dysf_ord = mc_group_composition_barplots(tumor_non_t_nk_id, tumor_id, groups=all_nms, name='all_by_dysf', global_col2group, global_group2col, pat_groups=list(Tumors=pats_by_dysf), pat_grp = global_pat_grp[, all_nms], pat_grp_n=global_pat_grp_norm[, all_nms], clust_pats=F, min_pat_cells=80)
-	
+
 	mc_gen_marks_heatmaps(tumor_non_t_nk_id, tumor_non_t_nk_id, lateral_gset_id)
-	
+
 	# stratify patients by %dysf
 	pat_f_dysf = global_pat_grp_norm[, 'dysfunctional']
 	dysf_pat_strat = ifelse(pat_f_dysf < 0.2, 'low', ifelse(pat_f_dysf < 0.4, 'mid', 'high'))
 	o_dysf_strat = ordered(dysf_pat_strat, levels=c('low', 'mid', 'high'))
-	
+
 	.plot_f_grp_by_dysf_helper = function(mc_id, x, nm, col) 
 	{
 		.plot_start(scfigs_fn(mc_id, sprintf("f_%s_strat_by_f_dysf", nm)), 200, 300)
@@ -1257,7 +1257,7 @@ generate_figs = function()
 	for (g in unique(names(nt_group2col))) {
 		.plot_f_grp_by_dysf_helper(tumor_non_t_nk_id, global_pat_grp_norm[, g], g, nt_group2col[g])
 	}
-	
+
 	.plot_start(scfigs_fn(tumor_t_nk_id, "f_dysf_pat_strats"), 900, 400)
 	par(mar=c(12,6,3,1))
 	barplot(sort(global_pat_grp_norm[, 'dysfunctional']), col=global_group2col['dysfunctional'], ylab='fraction', las=2, cex.names=1.5, cex.axis=1.5, cex.lab=1.5)
@@ -1266,7 +1266,7 @@ generate_figs = function()
 	axis(3, labels=c('low', 'mid', 'high'), las=1, at=1.2 * ((ds_sz_cs + c(0, ds_sz_cs[-3])) / 2), tick=F, cex.axis=1.5)
 	abline(v=0.1+ds_sz_cs[1:2]*1.2)
 	dev.off()
-	
+
 	# Fig 4C
 	f_inf_tab = read.table("data/processed_f_infiltrate.txt", header=T)
 	md_nms = c('stage', 'location', 'treatment')
@@ -1274,23 +1274,23 @@ generate_figs = function()
 	rownames(pats_md) = pats_md$PatientID
 	pats_md$f_inflitrate = f_inf_tab[ rownames(pats_md), 'f_inflitrate']
 	pats_md[, 5] = as.numeric(pats_md[, 5])
-	
+
 	# manual correction following new input from the pathologist!
 	pats_md['p3-4-LN-mIT', 'location'] = '(S)C'
 	pats_md['p4-4-LN-1IT', 'location'] = '(S)C'
 	.plot_start(scfigs_fn(tumor_t_nk_id, "f_dysf_pat_strats_with_metadata"), 700, 460)
 	layout(matrix(1:7, ncol=1), heights=c(180, 20, 20, 20, 60, 60, 100))
-	
+
 	par(mar=c(0.5,10,3,1))
 	barplot(global_pat_grp_norm[pats_by_dysf, 'dysfunctional'], col=global_group2col['dysfunctional'], ylab='fraction', las=2, cex.names=1.5, cex.axis=1.5, cex.lab=1.5, xaxt='n')
 	dysf_strats_sz = table(o_dysf_strat)
 	ds_sz_cs = cumsum(dysf_strats_sz)
 	axis(3, labels=c('low', 'medium', 'high'), las=1, at=1.2 * ((ds_sz_cs + c(0, ds_sz_cs[-3])) / 2), tick=F, cex.axis=1.5)
 	abline(v=0.1+ds_sz_cs[1:2]*1.2)
-	
+
 	par(mar=c(0.2, 10, 0.2, 1))
 	md_dict =  tgconfig::get_param("mcp_metadata_annot_colors", "metacell")
-	
+
 	for (nm in md_nms) {
 		barplot(rep(1, length(pats_by_dysf)), col=unlist(md_dict[[nm]][pats_md[pats_by_dysf, nm]]), yaxt='n', border=NA)
 		mtext(nm, 2, las=2)
@@ -1301,55 +1301,55 @@ generate_figs = function()
 	barplot(ifelse(is.na(pats_md[pats_by_dysf, 6]), max(pats_md[pats_by_dysf, 6], na.rm=T), pats_md[pats_by_dysf, 6]), col=ifelse(is.na(pats_md[pats_by_dysf, 6]), 'grey90', 'royalblue4'), las=2, cex.axis=1.5, cex.lab=1.5, ylab='%Inflitrate', names.arg = pats_by_dysf, cex.names=1.5, border=NA)
 	abline(h=0)
 	dev.off()
-	
+
 	# mc composition by patient
 	mc_pat_t = table(mc_t_nk@mc, mat_t_nk@cell_metadata[names(mc_t_nk@mc), 'PatientID'])
 	mc_pat_nt = table(mc_non_t_nk@mc, mat_non_t_nk@cell_metadata[names(mc_non_t_nk@mc), 'PatientID'])
 	max_mcsz = max(c(table(mc_t_nk@mc), table(mc_non_t_nk@mc)))
-	
+
 	plot_mc_metadata(rbind(mc_pat_t, mc_pat_nt), mc_colors=c(mc_t_nk@colors, mc_non_t_nk_merged@colors), mc_groups=global_col2group[c(mc_t_nk@colors, mc_non_t_nk_merged@colors)], is_mc_t_nk=NULL, mat_id=tumor_id, scfigs_fn(tumor_id, "mc_metadata"), pats_order=rownames(global_pat_grp_norm)[order(global_pat_grp_norm[, 'dysfunctional'])], groups_order=names(c(ord_by_id[[tumor_t_nk_id]], ord_by_id[[tumor_non_t_nk_merged_id]])), show_is_t=F)
-	
+
 	plot_mc_metadata(mc_pat_t, mc_colors=mc_t_nk@colors, mc_groups=t_col2group[mc_t_nk@colors], is_mc_t_nk=NULL, mat_id=tumor_t_nk_id, scfigs_fn(tumor_t_nk_id, "mc_metadata"), pats_order=rownames(global_pat_grp_norm)[order(global_pat_grp_norm[, 'dysfunctional'])], groups_order=names(ord_by_id[[tumor_t_nk_id]]), show_is_t=F, ncells_ylim=c(0, max_mcsz))
 	plot_mc_metadata(mc_pat_nt, mc_colors=mc_non_t_nk@colors, mc_groups=nt_col2group[mc_non_t_nk@colors], is_mc_t_nk=NULL, mat_id=tumor_non_t_nk_id, scfigs_fn(tumor_non_t_nk_id, "mc_metadata"), pats_order=rownames(global_pat_grp_norm)[order(global_pat_grp_norm[, 'dysfunctional'])], groups_order=names(ord_by_id[[tumor_non_t_nk_id]]), show_is_t=F, ncells_ylim=c(0, max_mcsz))
-	
+
 	# Fig S4C - T composition of treatment naive
 	treatment_naive_pats = mat_t_nk@cell_metadata[names(mc_t_nk@mc), ] %>% filter(treatment=='N') %>% dplyr::select(PatientID) %>% unique
 	plot_patients_group_comp(tumor_t_nk_id, "treatment_naive", filter_groups=setdiff(t_nms, 'NK'), patients=treatment_naive_pats$PatientID, sort_pats_by='dysfunctional', min_cells=100) 
-	
+
 	# Fig S4D - pairs of metastases side by side
 	plot_patients_group_comp(tumor_t_nk_id, "metastases_pairs", filter_groups=setdiff(t_nms, 'NK'), patients=c('p12-3-(S)C-N-1', 'p12-3-(S)C-N-2', 'p17-3-(S)C-N-1', 'p17-3-(S)C-N-2')) 
-	
+
 	nt_genes_ann = annotate_genes(rownames(lfp_nt))
 	tfs = rownames(nt_genes_ann)[grepl("TF", nt_genes_ann$type)]
-	
+
 	# genes cor heatmap
 	message("gen myeloid genes heatmap..")
-	
+
 	mono_mac_dc_genes = setdiff(names(which(apply(abs(lfp_nt[, f_myl_mc]), 1, max) > 3)), lat_genes)
 	mono_mac_dc_genes = grep("^RP", mono_mac_dc_genes, invert=T, v=T)
-	
+
 	nt_g_ann = data.frame(row.names=mono_mac_dc_genes, type=nt_genes_ann[mono_mac_dc_genes, 'type'])
-	
+
 	myl_cor_c = tgs_cor(t(as.matrix(mat_non_t_nk_ds[mono_mac_dc_genes, f_myl_c])), spearman=T)
 	myl_cor_mc = cor(t(lfp_nt[mono_mac_dc_genes, f_myl_mc]))
-	
+
 	# myl gene-gene cor heatmaps
 	blwtrd_cols = colorRampPalette(c('blue', 'white', 'red'))(101)
 	.plot_start(scfigs_fn(tumor_non_t_nk_id, "fig3_myl_c_genes_cor"), max(700, 300 + length(mono_mac_dc_genes) * 12), max(700, 300 + length(mono_mac_dc_genes) * 12))
 	pheatmap(pmin(pmax(myl_cor_c, -0.3), 0.3), clustering_method="ward.D2", cutree_rows=10, cutree_cols=10, treeheight_col=0, treeheight_row=0, cellwidth=10, cellheight=10, fontsize=12, col=blwtrd_cols, show_colnames=F) #annotation_row=g_ann, annotation_colors=list(type=ggroup_cols), 
 	dev.off()
-	
+
 	.plot_start(scfigs_fn(tumor_non_t_nk_id, "fig3_myl_mc_genes_cor"), max(700, 300 + length(mono_mac_dc_genes) * 12), max(700, 300 + length(mono_mac_dc_genes) * 12))
 	pheatmap(pmin(pmax(myl_cor_mc, -1), 1), clustering_method="ward.D2", cutree_rows=10, cutree_cols=10, treeheight_col=0, treeheight_row=0, cellwidth=10, cellheight=10, fontsize=12, col=blwtrd_cols, show_colnames=F) #, annotation_row=g_ann, annotation_colors=list(type=ggroup_cols)
 	dev.off()
-	
+
 	##### 
 	# monocyte - DC - macrophage gradients
 	myl_groups = c('macrophage', 'monocyte', 'DC')
 	myl_de = gene_diff_expr_by_groups(tumor_non_t_nk_id, tumor_non_t_nk_id, lateral_gset_id, n_ds=500, mat_ds=mat_non_t_nk_ds, groups=myl_groups, filter_outlier_genes=F, vgel_group_ord=ord_non_t_nms, min_log2_enr=2, blist_genes=c(lat_genes, tfs))
-	
+
 	myl_tot = colSums(mat_non_t_nk@mat[, colnames(myl_de$totu)])
-	
+
 	.plot_start(scfigs_fn(tumor_non_t_nk_id, "fig_S3_myeloid_signatures_f_umis_on_cells"), 1200, 400)
 	par(mfrow=c(1,3))
 	par(mar=c(5,5,5,5))
@@ -1361,11 +1361,11 @@ generate_figs = function()
 		points(ctotu['monocyte',] / cmyl_tot - ctotu['DC',] / cmyl_tot, ctotu['macrophage',]/ cmyl_tot - ctotu['DC',] / cmyl_tot, col=nt_group2col[g], pch=19, cex=0.7) 
 	}
 	dev.off()
-	
+
 	myl_genes = list()
 	myl_scores = list()
 	f_myl_g_mc = list()
-	
+
 	for (g in myl_groups) {
 		myl_genes[[g]] = myl_de$de[[g]]$gene
 		myl_scores[[g]] = colMeans(lfp_nt[myl_genes[[g]], ])
@@ -1380,41 +1380,41 @@ generate_figs = function()
 	myl_y = myl_scores[['macrophage']] - myl_scores[['DC']]
 	plt("monocyte - DC", "macrophage - DC", lfp_nt[, f_myl_mc], cols=mc_non_t_nk@colors[f_myl_mc], x=myl_x[f_myl_mc], y=myl_y[f_myl_mc], show_mc_ids=T, add_grid=T, ofn=scfigs_fn(tumor_non_t_nk_id, "fig_s3_myeloid_signatures_f_umis_on_myl_mcs"), cex.lab=1.5)
 	plt("monocyte - DC", "macrophage - DC", lfp_nt, cols=mc_non_t_nk@colors, x=myl_x, y=myl_y, show_mc_ids=T, add_grid=T, ofn=scfigs_fn(tumor_non_t_nk_id, "fig_s3_myeloid_signatures_f_umis_on_all_mcs"), cex.lab=1.5)
-	
+
 	# model monoc-mac-DC gradients with TFs
 	nt_tf_models = list()
 	for (g in myl_groups) {
 		nt_tf_models[[g]] = model_by_tfs(tumor_non_t_nk_id, myl_scores[[g]], NULL, nt_genes_ann[rownames(lfp_nt), ], f=f_myl_g_mc[[g]], nm1=g, nm2="None", grp1=g, grp2=NULL, nfolds=min(sum(f_myl_g_mc[[g]]), 10), max_genes_for_plot_size=30)
 	}
 	mono_vs_mac_model = model_by_tfs(tumor_non_t_nk_id, myl_scores[['monocyte']], myl_scores[['macrophage']], nt_genes_ann[rownames(lfp_nt), ], f = f_myl_g_mc[['macrophage']] | f_myl_g_mc[['monocyte']], nm1='monocyte', nm2='macrophage', grp1='monocyte', grp2='macrophage', max_genes_for_plot_size = 30)
-	
+
 	# lateral modules signatures on patients
 	ifn_gset = scdb_gset("mel_ifn_filt")
 	ifn_genes = names(ifn_gset@gene_set)
-	
+
 	stress_gset = scdb_gset("mel_stress_filt")
 	hs_sets = unique(stress_gset@gene_set [ grepl("HSP", names(stress_gset@gene_set))])
 	er_sets = unique(stress_gset@gene_set [ grepl("FOS|JUN", names(stress_gset@gene_set))])
 	stopifnot(length(intersect(hs_sets, er_sets)) == 0)
 	hs_genes = names(stress_gset@gene_set)[stress_gset@gene_set %in% hs_sets]
 	er_genes = names(stress_gset@gene_set)[stress_gset@gene_set %in% er_sets]
-	
+
 	med_ifn = plot_f_tot_genes_by_group(c(tumor_t_nk_id, tumor_non_t_nk_id), ifn_genes, "IFN", "lightblue")
 	med_hs = plot_f_tot_genes_by_group(c(tumor_t_nk_id, tumor_non_t_nk_id), hs_genes, "heat_shock", "orange")
 	med_er = plot_f_tot_genes_by_group(c(tumor_t_nk_id, tumor_non_t_nk_id), er_genes, "JUN_FOS", "darkgreen")
-	
+
 	# Fig 3A: 2d proj per patient T and non-T, only for patients with enough cells
 	mc_t_nk_pats = table(mc_t_nk@mc, mat_t_nk@cell_metadata[names(mc_t_nk@mc), 'PatientID'])
 	mc_non_t_nk_pats = table(mc_non_t_nk@mc, mat_non_t_nk@cell_metadata[names(mc_non_t_nk@mc), 'PatientID'])
 	min_cells_for_pat_spec_2d_plot = 500
 	stopifnot(all(colnames(mc_t_nk_pats) == colnames(mc_non_t_nk_pats)))
 	big_pats = names(which(colSums(mc_t_nk_pats) >= min_cells_for_pat_spec_2d_plot & colSums(mc_non_t_nk_pats) >= min_cells_for_pat_spec_2d_plot))
-	
+
 	prev_params = override_metacell_params(list(mcell_mc2d_plot_key=F, mcell_mc2d_height=500, mcell_mc2d_width=500, mcell_mc2d_cex=1))
 	mcell_mc2d_plot_by_factor(tumor_t_nk_id, tumor_t_nk_id, 'PatientID', single_plot=F, filter_values=big_pats, neto_points=T)
 	mcell_mc2d_plot_by_factor(tumor_non_t_nk_id, tumor_non_t_nk_id, 'PatientID', single_plot=F, filter_values=big_pats, neto_points=T)
 	restore_metacell_params(prev_params)
-	
+
 	# monocyte strats
 	monoc_genes = myl_genes[['monocyte']]
 	f_monoc_mc = f_myl_g_mc[['monocyte']]
@@ -1423,12 +1423,12 @@ generate_figs = function()
 	monoc_neto_cut = cut(f_monoc_neto, breaks=quantile(f_monoc_neto, seq(0, 1, by=0.2)), include.lowest=T, labels=paste0("Q", seq(0.1, 1, by=0.2)))
 	monoc_neto_strats = as.character(monoc_neto_cut)
 	names(monoc_neto_strats) = names(f_monoc_neto)
-	
+
 	for (g in c('LYZ', 'MXD1', 'MAF', 'CEBPB', 'KLF4', 'PTPRE', 'NFKBIA')) {
 		f_genes_by_strats_with_chisq_pval(tumor_non_t_nk_id, g, monoc_neto_strats, paste0(g, "_on_monocytes"), nt_group2col['monocyte'])
 	}
 	f_genes_by_strats_with_chisq_pval(tumor_non_t_nk_id, monoc_genes, monoc_neto_strats, "MonocGenes_on_monocytes", nt_group2col['monocyte'])
-	
+
 	###############
 	#
 	# TCR analysis
@@ -1443,34 +1443,34 @@ generate_figs = function()
 
 	tcr_cells = intersect(tcr$Well_ID, names(mc_t_nk@mc))
 	rownames(tcr) = tcr$Well_ID
-	
+
 	t_tcr = tcr[tcr_cells, ]
 	t_tcr$mc = mc_t_nk@mc[tcr_cells]
-	
+
 	.plot_start(scfigs_fn(tumor_t_nk_id, "clone_sizes_barplot"), 300, 300)
 	barplot(log2(table(pmin(table(t_tcr$clone_id), 12))), xlab='clone size', ylab='count (log2)')
 	dev.off()
-	
+
 	t_tcr$PatientID = mat_t_nk@cell_metadata[t_tcr$Well_ID, 'PatientID']
 	t_tcr$UnifPatientID = gsub("-.*", "", t_tcr$PatientID)
 	t_tcr$mc_grp = t_col2group[mc_t_nk@colors[mc_t_nk@mc[t_tcr$Well_ID]]]
 	t_tcr$seq_batch = mat_t_nk@cell_metadata[t_tcr$Well_ID, 'seq_batch_id']
-	
+
 	# pr TCR detection by expression of TCR genes (TRAC + TRBC2)
 	tcr_sc = Matrix::colSums(mat_t_nk@mat[c('TRAC', 'TRBC2'), ]) / Matrix::colSums(mat_t_nk@mat)
 	tcr_sc_bin = cut(tcr_sc, breaks=c(0, seq(min(tcr_sc[tcr_sc > 0]), quantile(tcr_sc, 0.98), length=8), max(tcr_sc)), include.lowest=T)
-	
+
 	f_t = mc_t_nk@colors[mc_t_nk@mc] != t_group2col['NK']
-	
+
 	p_tcr_t = tapply(names(tcr_sc)[f_t] %in% rownames(t_tcr), tcr_sc_bin[f_t], mean)
 	p_tcr_a = tapply(names(tcr_sc) %in% rownames(t_tcr), tcr_sc_bin, mean)
-	
+
 	p_tcr_grp_t = table(tcr_sc_bin[f_t], t_col2group[mc_t_nk@colors[mc_t_nk@mc[f_t]]])
 	p_tcr_grp_a = table(tcr_sc_bin, t_col2group[mc_t_nk@colors[mc_t_nk@mc]])
-	
+
 	p_tcr_grp_t_n = p_tcr_grp_t / rowSums((p_tcr_grp_t))
 	p_tcr_grp_a_n = p_tcr_grp_a / rowSums((p_tcr_grp_a))
-	
+
 	.plot_start(scfigs_fn(tumor_t_nk_id, "p_tcr_detect"), 600, 500)
 	layout(matrix(1:2, nrow=1), widths=c(3,1))
 	par(mar=c(4,4,4,3))
@@ -1482,7 +1482,7 @@ generate_figs = function()
 	plot(1:5, col=NA, xlab="", ylab="", xaxt='n', yaxt='n', bty='n')
 	legend("topleft", legend="Pr(detect)", pch=19, pt.cex=2, bty='n', col='black')
 	dev.off()
-	
+
 	if ('NK' %in% t_tcr$mc_grp) {
 		.plot_start(scfigs_fn(tumor_t_nk_id, "p_tcr_detect_with_NK"), 600, 500)
 		layout(matrix(1:2, nrow=1), widths=c(3,1))
@@ -1495,46 +1495,46 @@ generate_figs = function()
 		legend("topleft", legend="Pr(detect)", pch=19, pt.cex=2, bty='n', col='black')
 		dev.off()
 	}
-	
+
 	# clones by patients
 	# detecting jumper cells (same well, seq batch, clone, different amp_batch) which are likely cross-plate contamination - and remove them
 	jumper_cells = t_tcr %>% 
 		group_by(clone_id, cell_name) %>% 
 		summarize(n_batches=length(unique(Amp.Batch)), n_seq_batches=length(unique(seq_batch)), n_patients=length(unique(PatientID)), min_reads=min(reads_freq), max_reads=max(reads_freq)) %>% filter(n_batches > 1) %>% data.frame
-	
+
 	write.table(jumper_cells, sprintf("%s/jumper_cells.txt", .scfigs_base), quote=F, sep="\t")
 	t_tcr = t_tcr %>% anti_join(jumper_cells, by=c('clone_id', 'cell_name')) %>% data.frame
 	rownames(t_tcr) = t_tcr$Well_ID
-	
+
 	valid_clones = t_tcr %>% group_by(clone_id) %>% summarise(clone_size = length(Well_ID)) %>% filter(clone_size > 1) %>% data.frame 
 	t_tcr_ge2 = t_tcr %>% inner_join(valid_clones, by="clone_id")
 	t_tcr_singles = t_tcr[setdiff(t_tcr$Well_ID, t_tcr_ge2$Well_ID), ]
-	
+
 	# mc mc enrichment - looking at all pairs of cells sharing a clone
 	mc_pairs = do.call('rbind', lapply(split(t_tcr_ge2$mc, t_tcr_ge2$clone_id), function(x) { t(combn(x, 2)) }))
 	mc_mc = table(c(seq_along(mc_t_nk@colors), mc_pairs[,1]), c(seq_along(mc_t_nk@colors), mc_pairs[,2]))
 	diag(mc_mc) = diag(mc_mc) - 1
 	mc_mc = mc_mc + t(mc_mc)
-	
+
 	cln_shr_ignore_grps = c('NK', 'dysf-cd4', 'em-cd4')
 	e_mc_mc = shuffle_clones_mc_pairs_by_patient(tumor_t_nk_id, t_tcr, n_iters=200, ignore_groups=cln_shr_ignore_grps)
 	stopifnot(rownames(mc_mc)== rownames(e_mc_mc) & colnames(mc_mc) == colnames(e_mc_mc))
-	
+
 	e_mc_mc = (sum(mc_mc) / sum(e_mc_mc)) * e_mc_mc 
 	mc_mc_enr = log2( (mc_mc + 1e-3) / (e_mc_mc + 1e-3))
-	
+
 	mc_ann = data.frame(row.names=seq_along(mc_t_nk@colors), group=t_col2group[mc_t_nk@colors])
 	hc = hclust(dist(cor(mc_mc_enr)), method='ward.D2')
 	.plot_start(scfigs_fn(tumor_t_nk_id, "mc_mc_clone_sharing_norm_by_patient_shuffle"), 200+nrow(mc_mc) * 6, 100+nrow(mc_mc)*6)
 	pheatmap(pmin(pmax(mc_mc_enr[hc$order, hc$order], -4), 4),  annotation_row=mc_ann, annotation_col=mc_ann, annotation_colors=list(group=t_group2col), cluster_rows=F, cluster_cols=F, cellwidth=6, cellheight=6)
 	dev.off()
-	
+
 	# collapse mc-mc pairs counts on groups
 	grp_f = t_col2group[mc_t_nk@colors]
 	o_mc_mc_grp = metacell:::.row_stats_by_factor(t(metacell:::.row_stats_by_factor(mc_mc, grp_f, rowSums)), grp_f, rowSums)
-	
+
 	e_mc_mc_grp = metacell:::.row_stats_by_factor(t(metacell:::.row_stats_by_factor(e_mc_mc, grp_f, rowSums)), grp_f, rowSums)
-	
+
 	grp_reg=5
 	full_o_mc_mc_grp = o_mc_mc_grp
 	o_mc_mc_grp = o_mc_mc_grp[rowSums(o_mc_mc_grp) > 0 & !(rownames(o_mc_mc_grp) %in% cln_shr_ignore_grps), colSums(o_mc_mc_grp) > 0 & !(colnames(o_mc_mc_grp) %in% cln_shr_ignore_grps)]
@@ -1542,12 +1542,12 @@ generate_figs = function()
 	enr_mc_mc_grp = log2((o_mc_mc_grp+grp_reg) / (e_mc_mc_grp+grp_reg))
 	grp_mc_mc_hc = hclust(dist(cor(enr_mc_mc_grp)), method='ward.D2')
 	grp_ann = data.frame(row.names=rownames(o_mc_mc_grp), group = rownames(o_mc_mc_grp))
-	
+
 	.plot_start(scfigs_fn(tumor_t_nk_id, sprintf("mc_mc_clone_sharing_norm_group_agg_by_patient_shuffle_reg%d", grp_reg)), 200+nrow(o_mc_mc_grp)*25, 100+nrow(o_mc_mc_grp)*25)
 	enr_mc_mc_grp_o = enr_mc_mc_grp[grp_mc_mc_hc$order, grp_mc_mc_hc$order]
 	pheatmap(pmin(pmax(enr_mc_mc_grp_o, -3), 3), breaks=seq(-3, 3, length=100), display_numbers=round(enr_mc_mc_grp_o, 1), annotation_row=grp_ann, annotation_col=grp_ann, annotation_colors=list(group=t_group2col), cluster_rows=F, cluster_cols=F, cellwidth=25, cellheight=25)
 	dev.off()
-	
+
 	for (min_grp_size_in_cln in 1:2) {
 		aa = do.call("rbind", lapply(split(t_tcr_ge2$mc_grp, t_tcr_ge2$clone_id), function(grps) { ugrps = names(which(table(grps)>=min_grp_size_in_cln)); ugrpsi = expand.grid(ugrps, ugrps); cbind(as.character(ugrpsi[,1]), as.character(ugrpsi[,2])) }))
 		aa_t = table(aa[,1], aa[,2])
@@ -1555,18 +1555,18 @@ generate_figs = function()
 		aa_full[rownames(aa_t), colnames(aa_t)] = aa_t
 		write.table(aa_full, sprintf("%s/cln_grp_sharing_min%d_grp_sz_in_cln.txt", .scfigs_base, min_grp_size_in_cln), quote=F, sep="\t")
 	}
-	
+
 	.plot_start(scfigs_fn(tumor_t_nk_id, sprintf("mc_mc_clone_sharing_norm_group_agg_by_patient_shuffle_reg%d_tree", grp_reg)), 300, 200)
 	par(mar=c(8,4,1,1))
 	hcd = as.dendrogram(grp_mc_mc_hc)
 	plot(hcd)
 	dev.off()
-	
+
 	# clones mc group composition barplots
 	cln_grp = table(t_tcr$clone_id, t_tcr$mc_grp)
 	mid_clns_ord = plot_cln_group_composition(tumor_t_nk_id, t_tcr, cln_grp, c(8,20), group2col=t_group2col)
 	top_clns_ord = plot_cln_group_composition(tumor_t_nk_id, t_tcr, cln_grp, c(21,max(rowSums(cln_grp))), group2col=t_group2col)
-	
+
 	# clone size by patients colored by dominant group 
 	pat_grp = table(mat_t_nk@cell_metadata[names(mc_t_nk@mc), 'PatientID'], t_col2group[mc_t_nk@colors[mc_t_nk@mc]])
 	pat_grp_n = pat_grp / rowSums(pat_grp)
@@ -1575,26 +1575,26 @@ generate_figs = function()
 	o = ordered(clones$patient, levels=intersect(pats_by_dysf, unique(clones$patient)))
 	gnx = rnorm(nrow(clones), 0, 0.1)
 	gny = rnorm(nrow(clones), 0, 0.1)
-	
+
 	.plot_start(scfigs_fn(tumor_t_nk_id, "clone_size_by_patient_ord_by_f_dysf"), 600, 300)
 	par(mar=c(10,4,1,1))
 	plot(as.numeric(o)+gnx, log2(clones$clone_size)+gny, pch=19, col=t_group2col[clones$max_group], cex=0.9, xlab="", xaxt='n', ylab='clone size (log2) + noise')
 	axis(1, labels=levels(o), at=seq_along(levels(o)), las=2)
 	dev.off()
-	
+
 	# clones shared across patients
 	cln_pat = table(t_tcr$PatientID, t_tcr$clone_id)
-	
+
 	dup_cln_pat = cln_pat[ , colSums(cln_pat > 0) > 1]
 	dup_cln_pat = dup_cln_pat[rowSums(dup_cln_pat) > 0, ]
-	
+
 	l_dup_cln_pat = log2(1+dup_cln_pat)
-	
+
 	.plot_start(scfigs_fn(tumor_t_nk_id, "clones_across_patients_hc"), 1600, 800)
 	hc = hclust(dist(l_dup_cln_pat), method='ward.D2')
 	pheatmap(l_dup_cln_pat[hc$order, ], color=colorRampPalette(c('white', colorRampPalette(c('blue', 'red', 'black'))(6)))(101), number_format="%d", treeheight_col=0, treeheight_row=0, fontsize_row=11, fontsize_col=5)
 	dev.off()
-	
+
 	.plot_start(scfigs_fn(tumor_t_nk_id, "clones_across_patients"), 1600, 800)
 	pheatmap(l_dup_cln_pat, cluster_rows=F, color=colorRampPalette(c('white', colorRampPalette(c('blue', 'red', 'black'))(6)))(101), number_format="%d", treeheight_col=0, treeheight_row=0, fontsize_row=11, fontsize_col=5)
 	dev.off()
@@ -1602,12 +1602,12 @@ generate_figs = function()
 	clns_pat = table(t_tcr$clone_id, t_tcr$PatientID)
 	t_pat_grp = table(mat_t_nk@cell_metadata[names(mc_t_nk@mc), 'PatientID'], t_col2group[mc_t_nk@colors[mc_t_nk@mc]])
 	tumor_pats = intersect(all_tumor_pats, names(which(rowSums(t_pat_grp) >= min_t_nk_cells_per_patient)))
-	
+
 	t_pat_grp_n = t_pat_grp / rowSums(t_pat_grp)
 	all_pats_by_dysf = rownames(t_pat_grp_n)[order(t_pat_grp_n[, 'dysfunctional'])]
 	pats_by_dysf = intersect(all_pats_by_dysf, tumor_pats)
-	
-	
+
+
 	# Patient clone-size composition and type compostion by clone size
 	fig4_cd = function(max_clnsz_for_comp = 3, min_clones_per_pat = 0, min_cells_per_pat_clnsz=10, ds_tcrs=F, ds_n=NULL ) {
 		
@@ -1687,7 +1687,7 @@ generate_figs = function()
 		pat_cln_comp_n
 	}
 	pat_cln_comp_n = fig4_cd()
-	
+
 	# mc fraction size 1 clones vs >1 clones
 	f_tcr_eq1_mc = tapply(names(mc_t_nk@mc) %in% t_tcr_singles$Well_ID, mc_t_nk@mc, mean)
 	f_tcr_ge2_mc = tapply(names(mc_t_nk@mc) %in% t_tcr_ge2$Well_ID, mc_t_nk@mc, mean)
@@ -1696,68 +1696,68 @@ generate_figs = function()
 	plot(f_tcr_eq1_mc, f_tcr_ge2_mc, pch=21, bg=mc_t_nk@colors, xlab='% cells from n=1 clones', ylab='% cells from n>=2 clones', cex=1.5)
 	abline(a=0, b=1)
 	dev.off()
-	
+
 	# clones composition
 	for (sort_by in c('hclust', 'patient_type')) {
 		mid_clns_ord = plot_cln_group_composition(tumor_t_nk_id, t_tcr, cln_grp, c(8,20), group2col=t_group2col, sort_by=sort_by, odir=.scfigs_base)
 		top_clns_ord = plot_cln_group_composition(tumor_t_nk_id, t_tcr, cln_grp, c(21,max(rowSums(cln_grp))), group2col=t_group2col, sort_by=sort_by, odir=.scfigs_base)
 	}
-	
+
 	# proliferation
 	f_dysf_mc = mc_t_nk@colors == t_group2col['dysfunctional']
 	f_dysf_cc = f_dysf_mc[mc_t_nk@mc]
-	
+
 	f_dysf_neto = Matrix::colSums(mat_t_nk@mat[names(dysf_genes), f_dysf_cc]) / Matrix::colSums(mat_t_nk@mat[, f_dysf_cc])
 	dysf_neto_cut = cut(f_dysf_neto, breaks=quantile(f_dysf_neto, seq(0, 1, by=0.1)), include.lowest=T, labels=paste0("Q", seq(0.1, 1, by=0.1)))
 	dysf_neto_strats = as.character(dysf_neto_cut)
 	names(dysf_neto_strats) = names(f_dysf_neto)
-	
+
 	f_eff1_mc = mc_t_nk@colors == t_group2col['effector1']
 	f_eff1_cc = f_eff1_mc[mc_t_nk@mc]
 	f_eff1_neto = Matrix::colSums(mat_t_nk@mat[names(dysf_genes), f_eff1_cc]) / Matrix::colSums(mat_t_nk@mat[, f_eff1_cc])
 	eff1_neto_cut = cut(f_eff1_neto, breaks=quantile(f_eff1_neto, seq(0, 1, by=0.2)), include.lowest=T, labels=paste0("Q", seq(0.2, 1, by=0.2)))
 	eff1_neto_strats = as.character(eff1_neto_cut)
 	names(eff1_neto_strats) = names(f_eff1_neto)
-	
+
 	f_eff1_dysf_mc = mc_t_nk@colors == t_group2col['dysfunctional'] | mc_t_nk@colors == t_group2col['effector1']
 	f_eff1_dysf_cc = f_eff1_dysf_mc[mc_t_nk@mc]
 	f_eff1_dysf = Matrix::colSums(mat_t_nk@mat[names(dysf_genes), f_eff1_dysf_cc]) / Matrix::colSums(mat_t_nk@mat[, f_eff1_dysf_cc])
 	eff1_dysf_cut = cut(f_eff1_dysf, breaks=quantile(f_eff1_dysf, seq(0, 1, by=0.1)), include.lowest=T, labels=paste0("Q", seq(0.1, 1, by=0.1)))
 	eff1_dysf_strats = as.character(eff1_dysf_cut)
 	names(eff1_dysf_strats) = names(f_eff1_dysf)
-	
+
 	tt = table(t_col2group[mc_t_nk@colors[mc_t_nk@mc[f_eff1_dysf_cc]]], eff1_dysf_strats)
 	tt_n = t(t(tt) / colSums(tt))
-	
+
 	.plot_start(scfigs_fn(tumor_t_nk_id, "transitional_dysf_stratas_comp"), 300, 300)
 	par(mar=c(8,4,4,1))
 	barplot(tt_n, las=2, col=t_group2col[rownames(tt_n)])
 	dev.off()
-	
+
 	f_treg = Matrix::colSums(mat_t_nk@mat[names(treg_genes), f_treg_c]) / Matrix::colSums(mat_t_nk@mat[, f_treg_c])
 	treg_cut = cut(f_treg, breaks=quantile(f_treg, seq(0, 1, by=0.2)), include.lowest=T, labels=paste0("Q", seq(0.2, 1, by=0.2)))
 	treg_strats = as.character(treg_cut)
 	names(treg_strats) = names(f_treg)
-	
+
 	cc_gset = scdb_gset("mel_cc_filt")
 	cc_genes = names(cc_gset@gene_set)
-	
+
 	t_cc_res = mel_mc_prolif_score(mc_id=tumor_t_nk_id, f_cc_cutoff = f_cc_cutoff, pats_order=rownames(pat_cln_comp_n), strat_by=list(dysfunctional=dysf_neto_strats, Treg=treg_strats, effector1=eff1_neto_strats))
 	nt_cc_res = mel_mc_prolif_score(mc_id=tumor_non_t_nk_id, f_cc_cutoff = f_cc_cutoff, pats_order=rownames(pat_cln_comp_n))
-	
+
 	# unified T/ non-T %prolif
 	min_cells_per_group_for_f_prolif=200
 	f_cc_by_grp = c(t_cc_res$f_cc_by_grp, nt_cc_res$f_cc_by_grp)
 	tot_cc_by_grp = c(t_cc_res$tot_cc_by_grp, nt_cc_res$tot_cc_by_grp)
 	grp_ind = tot_cc_by_grp >= min_cells_per_group_for_f_prolif
 	f_cc_by_grp = sort(f_cc_by_grp[grp_ind], decreasing = T)
-	
+
 	.plot_start(scfigs_fn(tumor_id, sprintf("f_prolif_by_grp_ge%d_cells", min_cells_per_group_for_f_prolif)), 700, 300)
 	par(mar=c(10,4,4,1))
 	barplot(f_cc_by_grp, col=global_group2col[names(f_cc_by_grp)], las=2, ylab='% prolif cells')
 	mtext(tot_cc_by_grp[names(f_cc_by_grp)], 3, at=seq(0.6, by=1.2, length=length(f_cc_by_grp)), las=2, line=0.5)
 	dev.off()
-	
+
 	# heatmap of strats lfp high var genes
 	strats_lfp_heatmap = function(strats, group='dysfunctional', fp_reg=0.1, min_lfp_diff=0.7, add_genes='TCF7') 
 	{
@@ -1780,10 +1780,10 @@ generate_figs = function()
 		pheatmap(pmin(pmax(strats_lfp_f[o, ], -1), 1), cluster_rows=F, cluster_cols=F, cellwidth=8, cellheight=6, fontsize_row=7, fontsize_col=9, gaps_row=cumsum(rle(apply(strats_lfp_f[o, ], 1, which.max))$lengths))
 		dev.off()
 	}
-	
+
 	strats_lfp_heatmap(dysf_neto_strats)
 	strats_lfp_heatmap(treg_strats, group='Treg')
-	
+
 	# %genes on dysf strats with chisq-pval
 	for (g in c('TIGIT', 'TOX2', 'ID3', 'CD8A')) {
 		f_genes_by_strats_with_chisq_pval(tumor_t_nk_id, g, dysf_neto_strats, paste0(g, "_on_dysf"), t_group2col['dysfunctional'])
@@ -1807,21 +1807,21 @@ generate_figs = function()
 	}
 
 	is_prolif = t_f_cc[names(dysf_neto_strats)] >= f_cc_cutoff
-	
+
 	tot_dysf_cyto = data.frame(row.names=names(mc_t_nk@mc), tot_cyto=Matrix::colSums(mat_t_nk@mat[names(cyto_genes), names(mc_t_nk@mc)]), tot_dysf=Matrix::colSums(mat_t_nk@mat[names(dysf_genes), names(mc_t_nk@mc)]), group=t_col2group[mc_t_nk@colors[mc_t_nk@mc]], stringsAsFactors=F)
 	tot_dysf_cyto[names(which(is_prolif)), 'group'] = 'dysf-prolif'
 	tot_dysf_cyto[names(which(!is_prolif)), 'group'] = 'dysf-non-prolif'
-	
+
 	.plot_start(scfigs_fn(tumor_t_nk_id, "sum_dysf_by_grp_breaking_dysf_by_prolif"), 400, 300)
 	par(mar=c(10,4,1,1))
 	boxplot(log2(1+tot_dysf) ~ group, tot_dysf_cyto, las=2, notch=T, ylab="sum DYSF umis (log2")
 	dev.off()
-	
+
 	.plot_start(scfigs_fn(tumor_t_nk_id, "sum_cyto_by_grp_breaking_dysf_by_prolif"), 400, 300)
 	par(mar=c(10,4,1,1))
 	boxplot(log2(1+tot_cyto) ~ group, tot_dysf_cyto, las=2, notch=T, ylab="sum cyto umis (log2")
 	dev.off()
-	
+
 	# clonality per patient by reactivity
 	clonality = apply(clns_pat, 2, clonality_from_cln_counts_vec)
 	.plot_start(scfigs_fn(tumor_t_nk_id, "pat_clonality_by_reac"), w=180, h=400)
@@ -1895,17 +1895,17 @@ generate_figs = function()
 			}
 		}
 	}
-	
+
 	fmat_id = all_facs_id
 	mc_all_id = tumor_clean_id #"mel_filt_clean_all_sep_nk_broad"
 	mc_t_nk_id = tumor_t_nk_id #"mel_filt_clean_all_broad_submc_T_NK" 
-	
+
 	mcell_add_mars_facs_data(fmat_id, all_id, "data/facs_index")
-	
+
 	fmat = scdb_mat(fmat_id)
 	t_nk_nms = names(ord_by_id[[mc_t_nk_id]])
-	
-	
+
+
 	for (spanel in c(2, 6, 9, 14, 15)) {
 		plot_ab_pair_by_mc_group(fmat_id, mc_all_id, spanel, "CD3", "CD45", group_ord=all_nms)
 		plot_ab_pair_by_mc_group(fmat_id, mc_t_nk_id, spanel, "CD3", "CD45", group_ord=t_nk_nms)
@@ -1919,21 +1919,21 @@ generate_figs = function()
 		plot_ab_pair_by_mc_group(fmat_id, mc_t_nk_id, 2, "CD8", ab2, group_ord=t_nk_nms)
 	}
 	plot_ab_pair_by_mc_group(fmat_id, mc_t_nk_id, 6, "CD8", 'CD137', group_ord=t_nk_nms)
-	
+
 	for (spanel in c(2, 6, 9, 14)) {
 		plot_ab_pair_by_mc_group(fmat_id, mc_t_nk_id, spanel, "CD4", "CD8", group_ord=t_nk_nms)
 	}
-	
+
 	plot_ab_pair_by_mc_group(fmat_id, mc_all_id, 15, "CD45", "CD45RA", group_ord=all_nms)
 	for (ab2 in c('PD1', 'CD103', 'DAPI', 'CCR7')) {
 		plot_ab_pair_by_mc_group(fmat_id, mc_t_nk_id, 15, "CD8", ab2, group_ord=t_nk_nms)
 	}
-	
+
 	valid_spanels = c(2,6,9)
 	md = fmat@cell_metadata[names(mc_t_nk@mc), ]
 	md$sp = md[, 'Staining panel']
 	md = md[md$sp %in% valid_spanels & !is.na(md$CD4_Ab) & !is.na(md$CD8_Ab), ]
-	
+
 	vn = .logicle_transform(md[, c('CD4_Ab', 'CD8_Ab')])
 	colnames(vn) = c('CD4_n', 'CD8_n')
 	md = cbind(md, vn)
@@ -1945,10 +1945,10 @@ generate_figs = function()
 		md[md$sp == sp & md$CD4_n < cd4_cutoffs[[as.character(sp)]] & md$CD8_n >= cd8_cutoffs[[as.character(sp)]], 'facs_type'] = 'CD8'
 		md[md$sp == sp & md$CD4_n < cd4_cutoffs[[as.character(sp)]] & md$CD8_n < cd8_cutoffs[[as.character(sp)]], 'facs_type'] = 'DN'
 	}
-	
+
 	facs_cols = c('red', 'orange', 'lightseagreen')
 	names(facs_cols) = c('CD4', 'CD8', 'DN')
-	
+
 	png(scfigs_fn(tumor_t_nk_id, "CD4_vs_CD8_by_panel", scfigs_dir(tumor_t_nk_id, "facs_idx")), w=900, h=300)
 	par(mfrow=c(1,3))
 	par(mar=c(3,3,3,3))
@@ -1960,12 +1960,12 @@ generate_figs = function()
 		abline(h=cd8_cutoffs[[as.character(sp)]], lty=2) 
 	}
 	dev.off()
-	
+
 	cells = intersect(rownames(md), names(mc_t_nk@mc))
 	facs_cells = split(cells, md[cells, 'facs_type'])
-	
+
 	mc2d = scdb_mc2d(tumor_t_nk_id)
-	
+
 	png(scfigs_fn(tumor_t_nk_id, "2d_proj_by_facs_type", scfigs_dir(tumor_t_nk_id, "facs_idx")), w=900, h=300)
 	par(mfrow=c(1,3))
 	par(mar=c(1,1,3,1))
@@ -1973,7 +1973,7 @@ generate_figs = function()
 		plot(mc2d@sc_x, mc2d@sc_y, pch=19, cex=0.5, col='lightgray', main=type)
 		points(mc2d@sc_x[facs_cells[[type]]], mc2d@sc_y[facs_cells[[type]]], pch=19, cex=0.5, col=facs_cols[type]) }
 	dev.off()
-	
+
 	#######################
 	#
 	# Additional supp figs
@@ -1984,40 +1984,40 @@ generate_figs = function()
 		
 	# S1 - FACS on selected patients
 	plot_facs_by_patient_wrap(fmd, patients=c("p2-4-LN-2IT", "p11-3-(S)C-N", "p27-4-(S)C-1IT"))
-	
+
 	# S1c - MC size distributions
 	mcsz = table(mc_a@mc)
 	.plot_start(scfigs_fn(tumor_clean_id, "S1C_mc_size_distr"), 450, 450)
 	hist(mcsz, 30, col='navyblue', xlab="#cells in metacell", ylab="#metacells")
 	dev.off()
-	
+
 	# S1d - %ribo UMIs vs tot UMIs
 	mc_f_ribo = tapply(Matrix::colSums(mat_all@mat[grep("^RPS|^RPL", mat_all@genes, perl=T, v=T), names(mc_a@mc)]), mc_a@mc, sum) / tapply(Matrix::colSums(mat_all@mat[, names(mc_a@mc)]), mc_a@mc, sum)
 	mc_mu_tot_umi = tapply(Matrix::colSums(mat_all@mat[, names(mc_a@mc)]), mc_a@mc, mean)
 	.plot_start(scfigs_fn(tumor_clean_id, "S1D_mc_f_ribo_vs_tot_umi"), 450, 450)
 	plot(log2(mc_mu_tot_umi), mc_f_ribo, pch=21, bg=mc_a@colors, xlab="mc mean tot UMIs (log2)", ylab="mc %ribo UMIs", cex=2)
 	dev.off()
-	
+
 	# S1f FACS CD4 vs CD8 on T subsets
 	nms = setdiff(names(ord_by_id[[tumor_t_nk_id]]), 'em-cd4')
 	names(nms) = nms
 	plot_facs_by_patient_wrap(fmd, mc_id=tumor_t_nk_id, patients=c("p4-4-LN-1IT", "p9-4-(S)C-2IT", "p13-3-(S)C-N"), ab_x="CD4", ab_y="CD8", groups=as.list(nms), fig_pref="S1F")
-	
+
 	# S1g - compare naive CD4 to naive CD8 (by FACS)
 	naive_cells = names(mc_t_nk@mc)[which(mc_t_nk@colors[mc_t_nk@mc] == t_group2col['naive'])]
 	naive_cd4 = intersect(naive_cells, facs_cells[['CD4']])
 	naive_cd4_m = rowMeans(mat_t_nk@mat[, naive_cd4])
-	
+
 	naive_cd8 = intersect(naive_cells, facs_cells[['CD8']])
 	naive_cd8_m = rowMeans(mat_t_nk@mat[, naive_cd8])
-	
+
 	.plot_start(scfigs_fn(tumor_t_nk_id, "S1G_naive_cd4_vs_cd8_mu_UMIs"), 450, 450)
 	plot(log2(naive_cd4_m), log2(naive_cd8_m), pch=19, cex=0.5, col='navyblue', main=sprintf("R^2 = %.2f", cor(naive_cd4_m, naive_cd8_m) **2), xlab=sprintf('mean naive CD4 (%d cells) UMIs (log2)', length(naive_cd4)), ylab=sprintf('mean naive CD8 (%d cells) UMIs (log2)', length(naive_cd8)))
 	yy = abs(log2((1e-2+naive_cd4_m) / (1e-2+naive_cd8_m)))
 	f = yy > 3 | (yy > 1 & log2(pmin(naive_cd4_m, naive_cd8_m)) > -4)
 	text(log2(naive_cd4_m[f]), log2(naive_cd8_m[f]), names(naive_cd8_m)[f], cex=0.7, pos=ifelse(naive_cd4_m[f] > naive_cd8_m[f], 4, 2))
 	dev.off()
-	
+
 	# S1h - diff expr naive vs rest
 	non_naive_cells = setdiff(names(mc_t_nk@mc), naive_cells)
 	non_naive_cells = setdiff(non_naive_cells, names(mc_t_nk@mc)[which(mc_t_nk@colors[mc_t_nk@mc] == t_group2col['NK'])])
@@ -2028,7 +2028,7 @@ generate_figs = function()
 	plot(yy$lf_tot1, yy$enr, pch=19, cex=0.5, col='navyblue', xlab='mean naive UMIs (log2)', ylab='naive enr (log2)', main='Naive vs rest of T')
 	text(yy$lf_tot1, yy$enr, yy$gene, pos=ifelse(yy$lf_tot1 > -2, 2, 4), cex=0.7)
 	dev.off()
-	
+
 	#S1I: lfp of dysf/CD4 metacells (scatter of log total vs. lfp?)
 	.plot_start(scfigs_fn(tumor_t_nk_id, "S1I_dysf_cd4_top_lfp_genes_barplot"), 200, 900)
 	par(mar=c(4,8,1,1))
@@ -2036,7 +2036,7 @@ generate_figs = function()
 	barplot(top_dysf_cd4, horiz=T, col=t_group2col['dysf-cd4'], yaxt='n', xlab='enr (log2)')
 	mtext(names(top_dysf_cd4), 2, at=seq(0.6, len=length(top_dysf_cd4), by=1.2), las=2, line=0.5)
 	dev.off()
-	
+
 	#S1J: lfp of memory CD4 metacells (scatter of log total vs. lfp?)
 	.plot_start(scfigs_fn(tumor_t_nk_id, "S1I_em_cd4_top_mean_lfp_genes_barplot"), 200, 900)
 	par(mar=c(4,8,1,1))
@@ -2047,14 +2047,14 @@ generate_figs = function()
 		
 	# S3B - marker heat map for non-T
 	mel_basic_mc_mc2d_plots(mc_id=tumor_non_t_nk_merged_id, mat_id=tumor_id, graph_id=tumor_id, lateral_gset_id = lateral_gset_id)
-	
-	
+
+
 	# S5B
 	mcsz = table(mc_t_nk@mc)
 	mcsz2 = table(t_tcr$mc)
 	f_tcr_mc = as.vector(mcsz2/mcsz)
 	plt("CD8 - CD4", "%TCR cov", lfp_t, mc_t_nk@colors, x=lfp_t['CD8A', ] + lfp_t['CD8B', ] - lfp_t['CD4', ], y=f_tcr_mc, ofn=scfigs_fn(tumor_t_nk_id, "f_tcr_vs_CD8_CD4_diff"))
-	
+
 	# S5C -Cell cycle gene module gene cor heatmap
 	cc_gset_id = "mel_cc_filt"
 	f_cc_reg=1e-3
@@ -2066,7 +2066,7 @@ generate_figs = function()
 	diag(cc_c) = NA
 	pheatmap(cc_c[hc$order, hc$order], cluster_rows=F, cluster_cols=F, breaks=seq(-1, 1, length=100), cellwidth=12, cellheight=12)
 	dev.off()
-	
+
 	# S5B - distribution of CC score on all T cells
 	f_cc = colSums(mat_t_nk@mat[cc_genes, ]) / colSums(mat_t_nk@mat)
 	.plot_start(scfigs_fn(tumor_t_nk_id, "l_f_cc"), 300, 300)
@@ -2074,10 +2074,10 @@ generate_figs = function()
 	abline(v=log2(f_cc_cutoff + f_cc_reg), lty=2, lwd=2)
 	dev.off()
 
-	
+
 	# S5E - distribution of prolif score on top prolif bin vs. naive
 	lf_cc_by_group = split(log2(f_cc + f_cc_reg), t_col2group[mc_t_nk@colors[mc_t_nk@mc]])
-	
+
 	.plot_start(scfigs_fn(tumor_t_nk_id, "lf_cc_ecdf_all_groups"), 400, 400)
 	plot(ecdf(-lf_cc_by_group[['dysfunctional']]), do.points=F, lwd=2, col=t_group2col['dysfunctional'], xlab="- %prolif UMIs (log2)", ylab="ecdf", main="", xlim=c(3, 6), ylim=c(0, 0.15))
 	for (g in names(lf_cc_by_group)) {
@@ -2086,10 +2086,10 @@ generate_figs = function()
 	abline(v=-log2(f_cc_cutoff + f_cc_reg), lty=2, lwd=2)
 	legend("topleft", legend=paste0(sprintf("%s (%.1f", names(lf_cc_by_group), 100*sapply(lf_cc_by_group, function(v) mean(v >= log2(f_cc_reg + f_cc_cutoff)))), "%)"), fill=t_group2col[names(lf_cc_by_group)], bty='n')
 	dev.off()
-	
+
 	# compare cross-metacell cells membership between the metacells in the paper and the metacell object generated by build_metacells
 	compare_mc_partitioning("mel_filt_Tumor_outClean_detailed_colors", "mel_filt_Tumor_new_outClean")
-	
+
 	# PBMC plots
 	fig_s_pbmc_plots()
 }
