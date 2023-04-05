@@ -1,4 +1,4 @@
-# to get file output run with: R CMD BATCH run_analysis.r
+# to get file output run with: R CMD BATCH run_analysis.r&
 # Loading code and downloading required data files
 library("tgstat")
 source("pipe.r")

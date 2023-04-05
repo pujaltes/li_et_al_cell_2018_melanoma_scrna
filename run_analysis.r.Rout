@@ -17,7 +17,7 @@ Type 'demo()' for some demos, 'help()' for on-line help, or
 'help.start()' for an HTML browser interface to help.
 Type 'q()' to quit R.
 
-> # to get file output run with: R CMD BATCH run_analysis.r
+> # to get file output run with: R CMD BATCH run_analysis.r&
 > # Loading code and downloading required data files
 > library("tgstat")
 > source("pipe.r")
@@ -28,4 +28,407 @@ downloaded 229.2 MB
 
 trying URL 'https://ftp.ncbi.nlm.nih.gov/geo/series/GSE99nnn/GSE99254/suppl/GSE99254_NSCLC.TCell.S12346.TPM.txt.gz'
 Content type 'application/x-gzip' length 342644092 bytes (326.8 MB)
-=====================
+==================================================
+downloaded 326.8 MB
+
+trying URL 'https://schic2.s3.eu-west-1.amazonaws.com/Li2018/scrna_db_Li2018.tar.gz'
+Content type 'application/x-gzip' length 966485547 bytes (921.7 MB)
+==================================================
+downloaded 921.7 MB
+
+
+Attaching package: ‘flowCore’
+
+The following object is masked from ‘package:Matrix’:
+
+    %&%
+
+
+Attaching package: ‘dplyr’
+
+The following object is masked from ‘package:flowCore’:
+
+    filter
+
+The following object is masked from ‘package:MASS’:
+
+    select
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Loaded glmnet 4.1-7
+
+Attaching package: ‘data.table’
+
+The following objects are masked from ‘package:dplyr’:
+
+    between, first, last
+
+initializing scdb to scrna_db_Li2018
+Warning messages:
+1: package ‘Matrix’ was built under R version 4.1.3 
+2: package ‘MASS’ was built under R version 4.1.3 
+3: package ‘pheatmap’ was built under R version 4.1.3 
+4: package ‘flowCore’ was built under R version 4.1.3 
+5: package ‘dplyr’ was built under R version 4.1.3 
+6: package ‘glmnet’ was built under R version 4.1.3 
+7: package ‘plotrix’ was built under R version 4.1.3 
+8: package ‘data.table’ was built under R version 4.1.3 
+> 
+> 
+> # increase png function default ppi to 300
+> png <- function (filename = "Rplot%03d.png", width = 480, height = 480, 
++     units = "px", pointsize = 12, bg = "white", res = 300, ..., 
++     type = c("cairo", "cairo-png", "Xlib", "quartz"), antialias) 
++ {
++     if (!checkIntFormat(filename)) 
++         stop("invalid 'filename'")
++     g <- .geometry(width, height, units, res)
++     new <- list(...)
++     if (missing(type)) 
++         type <- getOption("bitmapType")
++     type <- match.arg(type)
++     if (!missing(antialias)) 
++         new$antialias <- match.arg(antialias, aa.cairo)
++     d <- check.options(new, name.opt = ".X11.Options", envir = .X11env)
++     antialias <- match(d$antialias, aa.cairo)
++     if (type == "quartz") {
++         if (capabilities("aqua")) {
++             width <- g$width/ifelse(is.na(res), 72, res)
++             height <- g$height/ifelse(is.na(res), 72, res)
++             invisible(.External(C_Quartz, "png", path.expand(filename), 
++                 width, height, pointsize, d$family, d$antialias != 
++                   "none", "", bg, "white", if (is.na(res)) NULL else res))
++         }
++         else warning("type = \"quartz\" is unavailable. trying \"Xlib\"")
++     }
++     else if (type == "cairo") {
++         if (capabilities("cairo")) {
++             invisible(.External(C_devCairo, filename, 2L, g$width, 
++                 g$height, pointsize, bg, res, antialias, 100L, 
++                 d$family, 300, optionSymbolFont(d$symbolfamily)))
++         }
++         else warning("type = \"cairo\" is unavailable. trying \"Xlib\"")
++     }
++     else if (type == "cairo-png") {
++         if (capabilities("cairo")) {
++             invisible(.External(C_devCairo, filename, 5L, g$width, 
++                 g$height, pointsize, bg, res, antialias, 100L, 
++                 d$family, 300, optionSymbolFont(d$symbolfamily)))
++         }
++         else warning("type = \"cairo-png\" is unavailable. trying \"Xlib\"")
++     }
++     else invisible(.External2(C_X11, paste0("png::", filename), 
++         g$width, g$height, pointsize, d$gamma, d$colortype, d$maxcubesize, 
++         bg, bg, d$fonts, res, 0L, 0L, "", 0, 0, d$family, optionSymbolFont(d$symbolfamily)))
++ }
+> 
+> 
+> # Building the metacells
+> build_metacells()
+will read AB2541
+will read AB2542
+will read AB2553
+will read AB2570
+will read AB2543
+will read AB2574
+will read AB2491
+will read AB2492
+will read AB2493
+will read AB2494
+will read AB2495
+will read AB2496
+will read AB2497
+will read AB2498
+will read AB2499
+will read AB2500
+will read AB2501
+will read AB2549
+will read AB2502
+will read AB2503
+will read AB2504
+will read AB2505
+will read AB2506
+will read AB2507
+will read AB2508
+will read AB2509
+will read AB2510
+will read AB2511
+will read AB2512
+will read AB2513
+will read AB2514
+will read AB2515
+will read AB2516
+will read AB2517
+will read AB2518
+will read AB2519
+will read AB2520
+will read AB2521
+will read AB1889
+will read AB1890
+will read AB2105
+will read AB1891
+will read AB1892
+will read AB2093
+will read AB2094
+will read AB2095
+will read AB2096
+will read AB2097
+will read AB2100
+will read AB2101
+will read AB2102
+will read AB2104
+will read AB2103
+will read AB2106
+will read AB2098
+will read AB2107
+will read AB2108
+will read AB2099
+will read AB2903
+will read AB2898
+will read AB2904
+will read AB2899
+will read AB2905
+will read AB2906
+will read AB2907
+will read AB2900
+will read AB2909
+will read AB2908
+will read AB2910
+will read AB2911
+will read AB2912
+will read AB2913
+will read AB2914
+will read AB2901
+will read AB2902
+will read AB2915
+will read AB2916
+will read AB2917
+will read AB2918
+will read AB2919
+will read AB2936
+will read AB2989
+will read AB2990
+will read AB3078
+will read AB3079
+will read AB3086
+will read AB3087
+will read AB3088
+will read AB3089
+will read AB3090
+will read AB3091
+will read AB3092
+will read AB3093
+will read AB3094
+will read AB3095
+will read AB3096
+will read AB3262
+will read AB3263
+will read AB3264
+will read AB3265
+will read AB3266
+will read AB3267
+will read AB3268
+will read AB3269
+will read AB3270
+will read AB3271
+will read AB3272
+will read AB3273
+will read AB3274
+will read AB3275
+will read AB3276
+will read AB3277
+will read AB3278
+will read AB3279
+will read AB3280
+will read AB3281
+will read AB3282
+will read AB3283
+will read AB3284
+will read AB3718
+will read AB3719
+will read AB3725
+will read AB3726
+will read AB3755
+will read AB3937
+will read AB3938
+will read AB3939
+will read AB3940
+will read AB3941
+will read AB3942
+will read AB3943
+will read AB3944
+will read AB3945
+will read AB3946
+will read AB4027
+will read AB4028
+will read AB4029
+will read AB4030
+will read AB4031
+will read AB4032
+will read AB4033
+will read AB4034
+will read AB4035
+will read AB4036
+will read AB4037
+will read AB4038
+will read AB4039
+will read AB4040
+will read AB4041
+will read AB4042
+will read AB4121
+will read AB4122
+will read AB4123
+will read AB4124
+will read AB4125
+will read AB4126
+will read AB4127
+will read AB4128
+will read AB4129
+will read AB4130
+will read AB4131
+will read AB4132
+will read AB4133
+will read AB4134
+will read AB4135
+will read AB4136
+will read AB4137
+will read AB4138
+will read AB4139
+will read AB4140
+will read AB4141
+will read AB4142
+will read AB4143
+will read AB4144
+will read AB4207
+will read AB4208
+will read AB4209
+will read AB4210
+will read AB4211
+will read AB4212
+will read AB4213
+will read AB4214
+will read AB4215
+will read AB4216
+will read AB4217
+will read AB4218
+will read AB4219
+will read AB4220
+will read AB4221
+will read AB4222
+will read AB4223
+will read AB4224
+will read AB4225
+will read AB4226
+will read AB4227
+will read AB4228
+will read AB4165
+will read AB4166
+will read AB4229
+will read AB4230
+will read AB4231
+will read AB4232
+will read AB4233
+will read AB4234
+will read AB4235
+will read AB4236
+will read AB4237
+will read AB4238
+will read AB4239
+will read AB4240
+will read AB4241
+will read AB4242
+will read AB4243
+will read AB4244
+will read AB4245
+will read AB4246
+will read AB4247
+will read AB4248
+will read AB4249
+will read AB4250
+will read AB4251
+will read AB4252
+will read AB4346
+will read AB4347
+will read AB4348
+will read AB4349
+will read AB4350
+will read AB4351
+will read AB4352
+will read AB4353
+will read AB4354
+will read AB4355
+will read AB4356
+will read AB4357
+will read AB4359
+will read AB4360
+will read AB4361
+will read AB4362
+will read AB4363
+will read AB4364
+will read AB4365
+will read AB4366
+will read AB4367
+will read AB4415
+will read AB4416
+will read AB4417
+will read AB4418
+will read AB4419
+will read AB4420
+will read AB4421
+will read AB4422
+will read AB4423
+will read AB4424
+will read AB4425
+will read AB5008
+will read AB5009
+will read AB5010
+will read AB5011
+will read AB5012
+will read AB5013
+will read AB5014
+will read AB5015
+will read AB5016
+will read AB5017
+will read AB5018
+will read AB5019
+will read AB5190
+will read AB5191
+will read AB5192
+will read AB5193
+will read AB5194
+will read AB5195
+will read AB5196
+will read AB5197
+will read AB5198
+will read AB5199
+will read AB5424
+will read AB5425
+will read AB5426
+will read AB5427
+will read AB5428
+will read AB5429
+will read AB5482
+will read AB5483
+will read AB5484
+will read AB5485
+will read AB5486
+will read AB5487
+will read AB5488
+will read AB5489
+will read AB5490
+will read AB5491
+will read AB5492
+will read AB5493
+will read AB5494
+import mat done
+Error in checkIntFormat(filename) : 
+  could not find function "checkIntFormat"
+Calls: build_metacells ... mel_build_master_mat -> mcell_plot_batch_stats -> .plot_start -> png
+Execution halted
