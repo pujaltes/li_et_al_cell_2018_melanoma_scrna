@@ -26,3 +26,6 @@ Content type 'application/x-gzip' length 240324414 bytes (229.2 MB)
 ==================================================
 downloaded 229.2 MB
 
+trying URL 'https://ftp.ncbi.nlm.nih.gov/geo/series/GSE99nnn/GSE99254/suppl/GSE99254_NSCLC.TCell.S12346.TPM.txt.gz'
+Content type 'application/x-gzip' length 342644092 bytes (326.8 MB)
+=====================

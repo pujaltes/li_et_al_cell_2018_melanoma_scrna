@@ -4,4 +4,4 @@ scrna_db_Li2018/
 figs_Li2018/
 build_metacells_out.RData
 .vscode/
-.Rout
+*.Rout
