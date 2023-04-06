@@ -6,6 +6,8 @@ source("pipe.r")
 
 # Building the metacells
 build_metacells()
+save.image("after_build.RData")
 
 # Generate figures
 generate_figs()
+save.image("after_figs.RData")
