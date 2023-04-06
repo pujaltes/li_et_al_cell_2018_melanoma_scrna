@@ -2,6 +2,8 @@
 # Loading code and downloading required data files
 library("tgstat")
 source("pipe.r")
+set_param("mc_plot_ppi", 300, "metacell")  # Change dpi
+
 
 
 # Building the metacells
