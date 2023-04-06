@@ -1588,7 +1588,7 @@ compare_lfp_on_gene = function(mc_id, gene, groups=NULL)
 	pointsize = get_param("mc_plot_pointsize", "metacell")
 	
 	if (device == "png") {
-		png(filename=sub("ps$", "png", fn), width=w, height=h, res=res, pointsize = pointsize, res=300)
+		png(filename=sub("ps$", "png", fn), width=w, height=h, res=res, pointsize = pointsize)
 	}
 	else if (device == "ps") {
 		postscript(file=sub("png$", "ps", fn), width=w/res, height=h/res)
