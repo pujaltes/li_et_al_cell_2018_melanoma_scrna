@@ -2,7 +2,7 @@
 # Loading code and downloading required data files
 library("tgstat")
 source("pipe.r")
-set_param("mc_plot_ppi", 125, "metacell")  # Change dpi
+set_param("mc_plot_ppi", 175, "metacell")  # Change dpi
 
 
 
