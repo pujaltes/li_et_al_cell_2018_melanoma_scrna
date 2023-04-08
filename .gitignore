@@ -5,3 +5,4 @@ figs_Li2018/
 build_metacells_out.RData
 .vscode/
 *.Rout
+*.RData
