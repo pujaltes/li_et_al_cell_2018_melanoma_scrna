@@ -1583,11 +1583,11 @@ compare_lfp_on_gene = function(mc_id, gene, groups=NULL)
 .plot_start = function(fn, w, h)
 	
 {
-	w = w * 3
-	h = h * 3
+	w = w
+	h = h
 	device = get_param("mc_plot_device", "metacell")
-	res = get_param("mc_plot_ppi", "metacell") * 3
-	pointsize = get_param("mc_plot_pointsize", "metacell") * 3
+	res = get_param("mc_plot_ppi", "metacell")
+	pointsize = get_param("mc_plot_pointsize", "metacell")
 	
 	if (device == "png") {
 		png(filename=sub("ps$", "png", fn), width=w, height=h, res=res, pointsize = pointsize)

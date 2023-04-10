@@ -506,7 +506,7 @@ compare_mc_partitioning = function(mc1_id, mc2_id, do_log=F, ord1='by_col', ord2
 	
 	ofn_base = sprintf("memb_comp_with_%s_%s_%s_%s", mc2_id, ord1, ord2, ifelse(do_log, "log", "f"))
 	csize = 2
-	png(scfigs_fn(mc1_id, ofn_base), width=(400 + ncol(tab_n) * csize) * 3, height=(200 + nrow(tab_n) * csize) * 3, res=216)
+	png(scfigs_fn(mc1_id, ofn_base), width=(400 + ncol(tab_n) * csize), height=(200 + nrow(tab_n) * csize))
 	pheatmap(tab_n, color=colorRampPalette(c('white', 'darkred'))(101), cluster_rows=F, cluster_cols=F, cellwidth=csize, cellheight=csize, annotation_row=mc1_ann, annotation_col=mc2_ann, annotation_colors=ann_cols, show_colnames=F, show_rownames=F, border_col=NA, gaps_row=gaps1, gaps_col=gaps2)
 	dev.off()
 	
@@ -525,7 +525,7 @@ compare_mc_partitioning = function(mc1_id, mc2_id, do_log=F, ord1='by_col', ord2
 	}
 	
 	if (!is.null(tt)) {
-		png(scfigs_fn(mc1_id, paste0(ofn_base, "_collaped")), width=max(800, 400 + ncol(tt) * col_size) * 3, height=max(800, 200 + nrow(tt) * row_size) * 3, res=216)
+		png(scfigs_fn(mc1_id, paste0(ofn_base, "_collaped")), width=max(800, 400 + ncol(tt) * col_size), height=max(800, 200 + nrow(tt) * row_size))
 		pheatmap(log2(1+tt), color=colorRampPalette(c('white', 'darkred'))(101), cluster_rows=T, cluster_cols=T, cellwidth=col_size, cellheight=row_size, annotation_row=g1_ann, annotation_col=g2_ann, annotation_colors=ann_cols, show_colnames=!is.null(nrow(g2_ann)), show_rownames=!is.null(nrow(g1_ann)), border_col=NA, treeheight_row=2, treeheight_col=2)
 		dev.off()
 		
@@ -1799,7 +1799,7 @@ generate_figs = function()
 		dysf_qs_de = diff_expr(mc_t_nk, mat_t_nk_ds, NULL, NULL, nms1=pos_c, nms2=neg_c)
 		de_f = dysf_qs_de %>% filter(abs(enr) > 1)
 		stopifnot(nrow(de_f) <= 40)
-		png(scfigs_fn(tumor_t_nk_id, paste0("dysf_strat_de_by_prolif_", qs)), 200 * 3, (100 + 40 * 15) * 3, res=216)
+		png(scfigs_fn(tumor_t_nk_id, paste0("dysf_strat_de_by_prolif_", qs)), 200, (100 + 40 * 15))
 		par(mar=c(4,8,4,1))
 		barplot(de_f$enr, horiz=T, names.arg=de_f$gene, las=2, col=ifelse(de_f$gene %in% cc_genes, 'grey', ifelse(de_f$enr > 0, 'blue', 'red')), main=sprintf("dysf %s prolif vs not", qs), ylim=c(0, 40))
 		dev.off()
@@ -1949,7 +1949,7 @@ generate_figs = function()
 	facs_cols = c('red', 'orange', 'lightseagreen')
 	names(facs_cols) = c('CD4', 'CD8', 'DN')
 
-	png(scfigs_fn(tumor_t_nk_id, "CD4_vs_CD8_by_panel", scfigs_dir(tumor_t_nk_id, "facs_idx")), w=900 * 3, h=300 * 3, res=216)
+	png(scfigs_fn(tumor_t_nk_id, "CD4_vs_CD8_by_panel", scfigs_dir(tumor_t_nk_id, "facs_idx")), w=900, h=300)
 	par(mfrow=c(1,3))
 	par(mar=c(3,3,3,3))
 	ccols = facs_cols[md$facs_type]
@@ -1966,7 +1966,7 @@ generate_figs = function()
 
 	mc2d = scdb_mc2d(tumor_t_nk_id)
 
-	png(scfigs_fn(tumor_t_nk_id, "2d_proj_by_facs_type", scfigs_dir(tumor_t_nk_id, "facs_idx")), w=900 * 3, h=300 * 3, res=216)
+	png(scfigs_fn(tumor_t_nk_id, "2d_proj_by_facs_type", scfigs_dir(tumor_t_nk_id, "facs_idx")), w=900, h=300)
 	par(mfrow=c(1,3))
 	par(mar=c(1,1,3,1))
 	for (type in names(facs_cells)) {
